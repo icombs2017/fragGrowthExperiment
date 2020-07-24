@@ -40,3 +40,11 @@ This is the working analysis pipeline to analyze data generated from 3D models o
 ***
 ## Loading required packages
 For the following analyses we will require the use of a number of different R packages. Most of which can be sourced from CRAN, but some must be downloaded from GitHub. We can use the following code to load in the packages and install any packages not previously installed in the R console. 
+
+```{r}
+
+```
+
+
+
+
