@@ -12,7 +12,7 @@ https://cs.olympus-imaging.jp/en/support/imsg/digicamera/download/manual/tg/man_
 3. Ensure that the date and time is accurate. If not, navigate to Menu > Settings Menu 2 > Date/Time and set the correct date and time
 
 4. Now ensure that your interval settings are correct. Navigate to Interval Settings Menu > Settings Menu 3 > Interval Settings
-    a. Frame = 200
+    a. Frame = 500
     b. Start Waiting Time = 00:00:00
     c. Interval Time = 00:00:01
     d. Time Lapse Movie = Off
@@ -37,8 +37,7 @@ https://cs.olympus-imaging.jp/en/support/imsg/digicamera/download/manual/tg/man_
 
 10. Position the camera facedown and start at the bottom left or right corner of the subject. Make sure that <20% of the subject is in frame, with the remaining portion of your monitor being taken up by raceway.
 
-11. Press the shutter button to begin the image capture sequence. Every time the camera snaps a photo, move the camera forward in a lawnmower pattern. It is important to maintain 70-80% overlap between subsequent photos. Keep the camera oriented straight down and do not change the orientation in between adjacent passes.
-4.	At the end of the first set of passes, rotate the camera 90 and complete another set of passes, continuing to take photos
+11. Press the shutter button to begin the image capture sequence. Every time the camera snaps a photo, move the camera forward in a lawnmower pattern. It is important to maintain 70-80% overlap between subsequent photos. Keep the camera oriented straight down and do not change the orientation in between adjacent passes. At the end of the first set of passes, rotate the camera 90 and complete another set of passes, continuing to take photos
 
 Note: The camera is set to capture 200 consecutive photos. If at anytime you need to stop filming, simply press the "Menu" button. If your pass is greater than 200 photos, simply just press the shutter button again to restart the interval sequence.
 
