@@ -1,0 +1,110 @@
+---
+title: "fragGrowthExperiment"
+author: "Ian Combs -- icombs@mote.org"
+output:
+  html_document:
+    theme: flatly
+    code_folding: show
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_doctument:
+      toc: yes
+      toc_depth: 3
+---
+```{r, setup, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, fig.align = 'left')
+knitr::opts_knit$set(root.dir = "../data")
+options(width = 88)
+library(magrittr)
+```
+
+### version: `r Sys.Date() %>% format(format="%B %d, %Y")`
+
+<!-- this is where the DOI would go  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3675991.svg)](https://doi.org/10.5281/zenodo.3675991)
+-->
+
+
+#### [GitHub repository](https://github.com/icombs2017/fragGrowthExperiment.git){target="_blank"}
+
+
+***
+### This is the analysis pipeline for 2018-2020 *Acropora palmata* outplanting data
+***
+### All analyses performed with R version `r getRversion()`
+
+# Basic setup of R environment
+***
+
+## Loading required packages
+For the following analyses we will require the use of a number of different R packages. Most of which can be sourced from CRAN, but some may be downloaded from GitHub. We can use the following code to load in the packages and install any packages not previously installed in the R console. 
+
+```{r, packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
+
+if (!require("pacman")) install.packages("pacman") 
+pacman::p_load("ggplot2", "stringr","dplyr", "patchwork", "flextable", "officer", "gdata", "data.table", "xlsx")
+
+```
+<br><br>
+
+# Loading data
+***
+
+Loading the data set into R. All analyses are conducted from a master spreadsheet. We are using the function `read.xls` from the package *gdata* to read the excel file straight into R.
+<br><br>
+This data set contains a count of "TMTC" or "too many to count" so we are adding a line of `na.strings = "TMTC"` which will take that string and treat it as an NA. This is so we can manipulate that column as integers. `na.strings` can be expanded to include other qualifiers if necessary. We included the code `class(rd$TotalHealthy)` to ensure that the column containing the "TMTC" input is being read as an integer and that the `na.strings = "TMTC"` worked. We are calling it `rd` for "roving diver" which is the type of surveys these are.
+
+```{r, load, include = "true"}
+summaryStats <- read.xls("../data/2018-2020 APAL Outplant Data.xlsx", sheet = 1)
+genoOutplant <- read.xls("../data/2018-2020 APAL Outplant Data.xlsx", sheet = 2)
+geno <- read.xls("../data/genoTranspose.xlsx", sheet = 1)
+
+head(summaryStats)
+head(genoOutplant)
+# genoOutplant <- genoOutplant[-c(3), ]   
+# head(genoOutplant)
+# genoTranspose <-  as.data.frame(t(genoOutplant))
+# 
+# write.xlsx(x = genoTranspose, file = "../data/genoTranspose.xlsx")
+
+head(geno)
+
+geno$Year <- geno$X
+geno %>% select(-X)
+
+head(geno)
+
+class(geno$Tag..s)
+geno$Tag <- geno$Tag..s
+
+names(geno)
+
+geno <- geno %>% select(-c(X, Tag..s)) %>% droplevels()
+
+head(geno)
+geno<- geno %>%
+  select(Year, everything()) %>% 
+  select(Tag, everything()) %>% 
+  select(Site.ID, everything()) %>% 
+  select(Date, everything())
+head(geno)
+
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
