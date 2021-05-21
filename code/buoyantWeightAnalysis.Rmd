@@ -1,0 +1,140 @@
+---
+title: "Buoyant Weight Analysis"
+author: "Ian Combs -- icombs@mote.org"
+output:
+  html_document:
+    theme: flatly
+    code_folding: show
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_doctument:
+      toc: yes
+      toc_depth: 3
+---
+```{r, setup, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, fig.align = 'left')
+knitr::opts_knit$set(root.dir = "../data")
+options(width = 88)
+library(magrittr)
+```
+
+### version: `r Sys.Date() %>% format(format="%B %d, %Y")`
+
+<!-- this is where the DOI would go  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3675991.svg)](https://doi.org/10.5281/zenodo.3675991)
+-->
+
+
+#### [GitHub repository](https://github.com/icombs2017/fragGrowthExperiment.git){target="_blank"}
+###
+
+***
+This is the working analysis pipeline to analyze data generated from 3D models of micro-fragmented coral colonies and larger frags to assess differences in growth rates between microfragmenting and natural growth. 
+
+***
+
+### All analyses performed with R version `r getRversion()`
+
+
+# Basic setup of R environment
+***
+## Loading required packages
+For the following analyses we will require the use of a number of different R packages. Most of which can be sourced from CRAN, but some must be downloaded from GitHub. We can use the following code to load in the packages and install any packages not previously installed in the R console. 
+
+
+```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata")
+
+
+
+
+```
+
+
+# Importing Data
+***
+## For now, this datasheet is housed on the GoogleDrive. However, it is exceedingly difficult to import data into `R` from the GoogleDrive, so we will be keeping a local copy in the *data* folder of this repository. Before you run this code, make sure the repository excel file is the most current (download it from the GoogleDrive nad replace it in the repo). From there we are importing the data directly as an excel sheet using the `read.xls()` function from the package `gdata`.
+
+
+
+```{r, loadingData, include = TRUE}
+
+bw <- read.xls(xls = "../data/BWdataset.xls")
+
+head(bw)
+
+
+```
+# Filtering Data
+***
+## Now we will perform a number of filters and data manipulations using multiple functions from the package `dplyr` to distill our data into a more digestable format. First, we want to combine two columns **Species** and **Genotype** into one column called **Geno**. We are doing this using hte `paste0` function. Then we are filtering our dataset to only include the columns we want using the `select()` function from the package `dplyr`. 
+
+```{r, dataManipulation, include = TRUE}
+
+bw$Genotype <- as.character(bw$Genotype)
+
+bw$Geno <- paste0(bw$Species, bw$Genotype)
+
+bwClean <- bw %>% select("Date", "TimePoint", "Species","Geno", "Trial", "ID", "Dry.weight")
+
+head(bwClean)
+
+
+
+
+```
+
+## Now I want to separate our data set into our Fragments and our Wild colonies. Using the function `filter()` from the package `dplyr`.
+
+```{r, splittingData, include = TRUE}
+
+
+bwFrags <- bwClean %>% dplyr::filter(ID == "frag")
+
+head(bwFrags)
+
+bwWild <- bwClean %>%  dplyr::filter(ID == "wild")
+
+head(bwWild)
+
+
+
+
+
+```
+# Visualizing Data
+***
+## I now want to visualize our data using the package `ggplot2`. 
+
+
+```{r, Graphs, include = TRUE}
+
+
+
+
+
+bwWildPlot <- ggplot(bwWild, aes(TimePoint, Dry.weight, color = Geno))+
+                      geom_point()+
+                       geom_line()+
+                      facet_wrap(~Species)
+  
+
+
+
+bwFragPlot <- ggplot(bwFrags, aes(TimePoint, Dry.weight, color = Geno))+
+                      geom_point()+
+                       geom_line()+
+                      # geom_boxplot()+
+                      facet_wrap(Geno~Species)
+  
+```
+
+
+
+
+
+
+
+
+

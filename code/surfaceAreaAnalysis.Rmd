@@ -1,5 +1,5 @@
 ---
-title: "fragGrowthExperiment"
+title: "Surface Area Analysis"
 author: "Ian Combs -- icombs@mote.org"
 output:
   html_document:
