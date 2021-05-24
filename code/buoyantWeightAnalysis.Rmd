@@ -44,7 +44,7 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools")
 
 
 
@@ -54,16 +54,19 @@ pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "strin
 
 # Importing Data
 ***
-## For now, this datasheet is housed on the GoogleDrive. However, it is exceedingly difficult to import data into `R` from the GoogleDrive, so we will be keeping a local copy in the *data* folder of this repository. Before you run this code, make sure the repository excel file is the most current (download it from the GoogleDrive nad replace it in the repo). From there we are importing the data directly as an excel sheet using the `read.xls()` function from the package `gdata`.
+## We are downloading this dataset from our GoogleDrive folder. We will be using the package `googledrive`. Each GoogleDrive file has a unique ID that does not change throughout the lifespan of the document, even if the file name is changed. This ID is housed in the file's URL. 
+Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Below you will copy and paste that into the function `drive_download` within `as_id`. This will save the file locally in the specified path (in this case our data folder) and you will import the folder as you normally would. Downloading it this way decreases the potential human error when downloading, moving folders, renaming etc and ensures that the most up to date file is being utilized. 
 
 
 
 ```{r, loadingData, include = TRUE}
 
-bw <- read.xls(xls = "../data/BWdataset.xls")
+drive_download(
+  as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
+  path = "../data/bwDataset.xlsx", 
+  overwrite = TRUE)
 
-head(bw)
-
+bw <- read_excel("../data/bwDataset.xlsx")
 
 ```
 # Filtering Data
@@ -72,11 +75,11 @@ head(bw)
 
 ```{r, dataManipulation, include = TRUE}
 
-bw$Genotype <- as.character(bw$Genotype)
+bw$genotype <- as.character(bw$genotype)
 
-bw$Geno <- paste0(bw$Species, bw$Genotype)
+bw$geno <- paste0(bw$species, bw$genotype)
 
-bwClean <- bw %>% select("Date", "TimePoint", "Species","Geno", "Trial", "ID", "Dry.weight")
+bwClean <- bw %>% select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight")
 
 head(bwClean)
 
@@ -114,19 +117,24 @@ head(bwWild)
 
 
 
-bwWildPlot <- ggplot(bwWild, aes(TimePoint, Dry.weight, color = Geno))+
-                      geom_point()+
-                       geom_line()+
-                      facet_wrap(~Species)
+bwWildPlot <- ggplot(bwWild, aes(timePoint, dryWeight))+
+                      geom_point(aes(fill = "black"))+
+                      geom_line(aes(color = geno))+
+                      geom_area(aes(fill = geno, alpha = 0.5))+
+                      facet_wrap(geno~species)
   
+bwWildPlot
 
 
-
-bwFragPlot <- ggplot(bwFrags, aes(TimePoint, Dry.weight, color = Geno))+
-                      geom_point()+
-                       geom_line()+
-                      # geom_boxplot()+
-                      facet_wrap(Geno~Species)
+bwFragPlot <- ggplot(bwFrags, aes(timePoint, dryWeight))+
+                      geom_point(aes(fill = "black"))+
+                      geom_line(aes(color = geno))+
+                      geom_area(aes(fill = geno, alpha = 0.5))+
+                      facet_wrap(geno~species)
+  bwFragPlot
+  
+  
+  
   
 ```
 
