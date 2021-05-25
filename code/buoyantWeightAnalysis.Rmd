@@ -67,6 +67,7 @@ drive_download(
   overwrite = TRUE)
 
 bw <- read_excel("../data/bwDataset.xlsx")
+bw
 
 ```
 # Filtering Data
@@ -93,7 +94,7 @@ head(bwClean)
 ```{r, splittingData, include = TRUE}
 
 
-bwFrags <- bwClean %>% dplyr::filter(ID == "frag")
+bwFrags <- bwClean %>% dplyr::filter(ID == "frag") %>% select(c("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight")) %>% group_by(timePoint, geno) %>% summarise_at(vars(dryWeight), mean)
 
 head(bwFrags)
 
@@ -120,20 +121,23 @@ head(bwWild)
 bwWildPlot <- ggplot(bwWild, aes(timePoint, dryWeight))+
                       geom_point(aes(fill = "black"))+
                       geom_line(aes(color = geno))+
-                      geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(geno~species)
+                      #geom_area(aes(fill = geno, alpha = 0.5))+
+                      facet_wrap(geno~species)+
+                      ylim(0,2000)
   
 bwWildPlot
+ggsave("../figures/wild.png", plot = bwWildPlot, height = 5, width = 9, units = 'in',dpi = 600)
 
 
 bwFragPlot <- ggplot(bwFrags, aes(timePoint, dryWeight))+
                       geom_point(aes(fill = "black"))+
                       geom_line(aes(color = geno))+
-                      geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(geno~species)
+                      #geom_area(aes(fill = geno, alpha = 0.5))+
+                      facet_wrap(~geno)+
+                      ylim(0,400)
   bwFragPlot
-  
-  
+ ggsave("../figures/frags.png", plot = bwFragPlot, height = 5, width = 9, units = 'in',dpi = 600)
+ 
   
   
 ```
