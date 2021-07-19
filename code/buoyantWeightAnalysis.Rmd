@@ -142,6 +142,18 @@ bwFragPlot <- ggplot(bwFrags, aes(timePoint, dryWeight))+
   
 ```
 
+```{r, testGraph, include = TRUE, }
+
+bwTESTPlot <- ggplot(bwWild, aes(timePoint, dryWeight))+
+                      geom_point(aes(fill = "black"))+
+                      geom_line(aes(color = geno))+
+                      #geom_area(aes(fill = geno, alpha = 0.5))+
+                      facet_wrap(geno~species)+
+                      ylim(0,2000)
+  
+```
+
+
 
 
 
