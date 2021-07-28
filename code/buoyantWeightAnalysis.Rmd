@@ -44,7 +44,7 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork")
 
 
 
@@ -80,7 +80,15 @@ bw$genotype <- as.character(bw$genotype)
 
 bw$geno <- paste0(bw$species, bw$genotype)
 
-bwClean <- bw %>% select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight")
+bwClean <- bw %>% select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight") %>% dplyr::filter(species %in% c("ps", "pc", "dl"))
+
+
+bwClean$timePoint <- as.factor(bwClean$timePoint)
+bwClean$species <- as.factor(bwClean$species)
+bwClean$geno <- as.factor(bwClean$geno)
+bwClean$trial <- as.factor(bwClean$trial)
+bwClean$ID <- as.factor(bwClean$ID)
+
 
 head(bwClean)
 
@@ -94,11 +102,11 @@ head(bwClean)
 ```{r, splittingData, include = TRUE}
 
 
-bwFrags <- bwClean %>% dplyr::filter(ID == "frag") %>% select(c("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight")) %>% group_by(timePoint, geno) %>% summarise_at(vars(dryWeight), mean)
+bwFrags <- bwClean %>% dplyr::filter(ID %in% "frag") %>% select(c("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight")) %>% group_by(timePoint, geno) %>% summarise_at(vars(dryWeight), mean)
 
 head(bwFrags)
 
-bwWild <- bwClean %>%  dplyr::filter(ID == "wild")
+bwWild <- bwClean %>%  dplyr::filter(ID %in% "wild")
 
 head(bwWild)
 
@@ -138,7 +146,10 @@ bwFragPlot <- ggplot(bwFrags, aes(timePoint, dryWeight))+
   bwFragPlot
  ggsave("../figures/frags.png", plot = bwFragPlot, height = 5, width = 9, units = 'in',dpi = 600)
  
-  
+ 
+ bwFinalPlot <- ggplot(firstAndLast, aes(timePoint, dryWeight))+
+                        geom_bar(stat = 'identity')+
+                        facet_wrap(geno~ID)
   
 ```
 
@@ -153,8 +164,63 @@ bwTESTPlot <- ggplot(bwWild, aes(timePoint, dryWeight))+
   
 ```
 
+# Looking at percent change between the first and last timepoints
+***
+## I now want to just expolore how much things changed between the first and last (so far) timepoint of our experiment. Here we will be using `filter()` function from the package `dplyr` to filter our data set to just use the first and last timepoint of buoyant weight measuremnents. We are checking to ensure we have all of our cases by using the function `length()` of an arbitary column in our new dataframe. 
 
 
+
+```{r, firstAndLastTimepoint, include = TRUE}
+
+bwFinal <- bwClean %>% dplyr::filter(timePoint %in% c("0","4")) %>%
+  select(c('date','timePoint','species','geno','trial','ID','dryWeight')) %>% 
+  group_by("timePoint","geno")
+
+length(bwFinal$timePoint)
+
+
+bwFirst <- bwFinal %>% filter(timePoint %in% "0")
+bwLast <- bwFinal %>%  filter(timePoint %in% "4")
+
+bwChange <- bind_cols(bwFirst, bwLast$dryWeight)
+bwChange$dryWeightInitial <- bwChange$dryWeight
+bwChange$dryWeightFinal <- bwChange$...10
+bwChange$percentChange <- ((bwChange$dryWeightFinal - bwChange$dryWeightInitial)/bwChange$dryWeightInitial)*100
+
+bwChange <- bwChange %>% 
+  ungroup() %>% 
+  select(c("species","geno","trial","ID","percentChange"))
+
+changeFrag <- bwChange %>% filter(ID %in% "frag")
+changeWild <- bwChange %>% filter(ID %in% "wild")
+
+changeFragPlot <- ggplot(changeFrag, aes(x = trial, y = percentChange, fill = geno))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  facet_wrap(~geno)+
+  ylim(-100,300)+
+  theme(
+    axis.text.x = element_text(angle = 45)
+  )
+
+
+
+
+
+
+
+changeWildPlot <- ggplot(changeWild, aes(x = geno, y = percentChange))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  ylim(-100,300)+
+    facet_wrap(~species)
+
+
+
+changePlotAll <- changeFragPlot | changeWildPlot
+
+
+
+
+```
 
 
 
