@@ -246,7 +246,7 @@ bwTESTPlot <- ggplot(bwWild, aes(timePoint, dryWeight))+
 ```{r, firstAndLastTimepoint, include = TRUE}
 
 bwFinal <- bwClean %>% 
-  dplyr::filter(timePoint %in% c("0","4")) %>%
+  dplyr::filter(timePoint %in% c("1","4")) %>%
   select(c('timePoint','species','geno','trial','ID','dryWeight'))
 
 
@@ -254,7 +254,7 @@ length(bwFinal$timePoint)
 
 bwChange <- dcast(bwFinal, species+geno+trial+ID~timePoint) 
 
-bwChange <- dplyr::rename(bwChange, "initialDryWeight" = "0", "finalDryWeight" = "4")
+bwChange <- dplyr::rename(bwChange, "initialDryWeight" = "1", "finalDryWeight" = "4")
 bwChange
 
 bwChange$percentChange <- ((bwChange$finalDryWeight-bwChange$initialDryWeight)/bwChange$initialDryWeight)*100
@@ -278,7 +278,7 @@ changeWild <- bwChange %>%
 
 changeFragPlot <- ggplot(changeFrag, aes(x = trial, y = percentChange, fill = geno))+
   geom_bar(stat = 'identity', position = 'dodge')+
-  facet_wrap(~geno)+
+  #facet_wrap(~geno)+
   ylim(-100,300)+
   theme(
     axis.text.x = element_text(angle = 45)
@@ -292,12 +292,23 @@ changeFragPlot <- ggplot(changeFrag, aes(x = trial, y = percentChange, fill = ge
 
 changeWildPlot <- ggplot(changeWild, aes(x = geno, y = percentChange))+
   geom_bar(stat = 'identity', position = 'dodge')+
-  ylim(-100,300)+
-  facet_wrap(~species)
+  ylim(-100,300)
+
+
+
++
+  facet_wrap(geno~species)
 
 
 
 changePlotAll <- changeFragPlot | changeWildPlot
+
+bwWild <- bwClean %>% dplyr::filter(ID %in% "wild")
+
+wildPlot <- ggplot(changeWild, aes(x = percentChange, y = geno, fill = trial))+
+  geom_bar(stat = 'identity')
+  
+
 
 
 
@@ -306,6 +317,26 @@ changePlotAll <- changeFragPlot | changeWildPlot
 
 
 
+```{r}
+weirdOnes <- bwClean %>% dplyr::filter(ID %in% "wild")
+
+weirdPlot <- ggplot(weirdOnes, aes(x = timePoint, y = dryWeight, color = geno))+
+  geom_point(size = 5)+
+  geom_line()+
+  facet_wrap(trial~ geno)+
+  labs(title = "Wild Colonies")
+
+alsoWeird <- bwClean %>% dplyr::filter(ID %in% "frag")
+
+otherWeirdPlot <- ggplot(alsoWeird, aes(x = timePoint, y = dryWeight, color = geno))+
+  geom_point(size = 5)+
+  geom_line()+
+  facet_wrap(trial~ geno)+
+  labs(title = "Frags")
+  
+  totalWeirdness <- weirdPlot + otherWeirdPlot
+
+```
 
 
 
