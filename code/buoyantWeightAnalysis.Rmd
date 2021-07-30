@@ -29,7 +29,7 @@ library(magrittr)
 ###
 
 ***
-This is the working analysis pipeline to analyze data generated from 3D models of micro-fragmented coral colonies and larger frags to assess differences in growth rates between microfragmenting and natural growth. 
+This is the working analysis pipeline to analyze data generated from 3D models of micro-fragmented coral colonies and larger frags to assess differences in growth rates between microfragments and natural growth. 
 
 ***
 
@@ -44,7 +44,7 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork","reshape2")
 
 
 
@@ -55,16 +55,16 @@ pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "strin
 # Importing Data
 ***
 ## We are downloading this dataset from our GoogleDrive folder. We will be using the package `googledrive`. Each GoogleDrive file has a unique ID that does not change throughout the lifespan of the document, even if the file name is changed. This ID is housed in the file's URL. 
-Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Below you will copy and paste that into the function `drive_download` within `as_id`. This will save the file locally in the specified path (in this case our data folder) and you will import the folder as you normally would. Downloading it this way decreases the potential human error when downloading, moving folders, renaming etc and ensures that the most up to date file is being utilized. 
+Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Below you will copy and paste that into the function `drive_download` within `as_id`. This will save the file locally in the specified path (in this case our data folder) and you will import the folder as you normally would. Downloading it this way decreases the potential human error when downloading, moving folders, renaming, saving etc and ensures that the most up to date file is being utilized. 
 
 
 
 ```{r, loadingData, include = TRUE}
 
-# drive_download(
-#   as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
-#   path = "../data/bwDataset.xlsx", 
-#   overwrite = TRUE)
+drive_download(
+  as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
+  path = "../data/bwDataset.xlsx", 
+  overwrite = TRUE)
 
 bw <- read_excel("../data/bwDataset.xlsx")
 bw
@@ -80,7 +80,21 @@ bw$genotype <- as.character(bw$genotype)
 
 bw$geno <- paste0(bw$species, bw$genotype)
 
-bwClean <- bw %>% select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight")
+bwClean <- bw %>% 
+  select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight") %>% 
+  dplyr::filter(species %in% c("ps", "pc", "dl"))
+
+
+bwClean$timePoint <- as.factor(bwClean$timePoint)
+
+bwClean$species <- as.factor(bwClean$species)
+
+bwClean$geno <- as.factor(bwClean$geno)
+
+bwClean$trial <- as.factor(bwClean$trial)
+
+bwClean$ID <- as.factor(bwClean$ID)
+
 
 head(bwClean)
 
@@ -89,16 +103,86 @@ head(bwClean)
 
 ```
 
+
+## Here I am going to make the corrections from the blank plugs and tiles and incorporate them into our dry weight measurements. We had a blank tile and 5 blank plugs in each raceway to account for algae growth and fouling oraganisms (mainly tube worms) fouling our corals. 
+
+```{r, blankCorrection, include = TRUE}
+
+
+bwTiles <- bw %>% 
+  select("timePoint", "trial", "ID", "dryWeight") %>% 
+  dplyr::filter(ID %in% "tile")
+
+
+bwFinalTiles <- bwTiles %>% 
+  dplyr::filter(timePoint %in% c("0","4")) %>%
+  select(c('timePoint','trial','ID','dryWeight'))
+
+meanTiles <- mean(bwFinalTiles$dryWeight)
+
+
+
+
+
+
+
+bwTileChange <- dcast(bwFinalTiles, trial+ID~timePoint) 
+
+bwTileChange <- dplyr::rename(bwTileChange, "initialDryWeight" = "0", "finalDryWeight" = "4")
+bwTileChange
+
+bwTileChange$percentChange <- ((bwTileChange$finalDryWeight-bwTileChange$initialDryWeight)/bwTileChange$initialDryWeight)*100
+
+
+
+
+bwPlugs <- bw %>% 
+  select("timePoint", "trial", "ID", "dryWeight") %>% 
+  dplyr::filter(ID %in% "plugs")
+
+bwFinalPlugs <- bwPlugs %>% 
+  dplyr::filter(timePoint %in% c("0","4")) %>%
+  select(c('timePoint','trial','ID','dryWeight'))
+
+
+bwFinalPlugs$avgPlug <- bwFinalPlugs$dryWeight/5
+
+
+
+```
+
+
+### Now we are going to correct our weights by removing the weight of the plugs and the tiles from the frags and whole colonies, respectively. 
+
+
+```{r, dryWeightCorrection, include = TRUE}
+
+
+bwClean$correctedDryWeight <- bwClean$dryWeight 
+
+bwCleanFrags <- bwClean %>% 
+  dplyr::filter(ID %in% "frag")
+
+bwCleanWild <- bwClean %>% 
+  dplyr::filter(ID %in% "wild")
+
+bwcleanFrags$adjWeight <- bwcleanFrags$dryWeight - bwClean
+
+```
+
+
+
+
 ## Now I want to separate our data set into our Fragments and our Wild colonies. Using the function `filter()` from the package `dplyr`.
 
 ```{r, splittingData, include = TRUE}
 
 
-bwFrags <- bwClean %>% dplyr::filter(ID == "frag") %>% select(c("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight")) %>% group_by(timePoint, geno) %>% summarise_at(vars(dryWeight), mean)
+bwFrags <- bwClean %>% dplyr::filter(ID %in% "frag") %>% select(c("timePoint", "species", "geno", "trial", "ID", "dryWeight")) %>% group_by(timePoint, geno) %>% summarise_at(vars(dryWeight), mean)
 
 head(bwFrags)
 
-bwWild <- bwClean %>%  dplyr::filter(ID == "wild")
+bwWild <- bwClean %>%  dplyr::filter(ID %in% "wild")
 
 head(bwWild)
 
@@ -122,7 +206,7 @@ bwWildPlot <- ggplot(bwWild, aes(timePoint, dryWeight))+
                       geom_point(aes(fill = "black"))+
                       geom_line(aes(color = geno))+
                       #geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(~geno)+
+                      facet_wrap(geno~species)+
                       ylim(0,2000)
   
 bwWildPlot
@@ -138,8 +222,8 @@ bwFragPlot <- ggplot(bwFrags, aes(timePoint, dryWeight))+
   bwFragPlot
  ggsave("../figures/frags.png", plot = bwFragPlot, height = 5, width = 9, units = 'in',dpi = 600)
  
-  
-  
+ 
+ 
 ```
 
 ```{r, testGraph, include = TRUE, }
@@ -153,87 +237,109 @@ bwTESTPlot <- ggplot(bwWild, aes(timePoint, dryWeight))+
   
 ```
 
-#Im trying to compare growth rates within species, across trials
-
-```{r, species comparisons}
-
-bwFrags1 <- bwClean %>% dplyr::filter(ID == "frag")
-
-bwFrag_dl<- bwFrags1 %>%
-  filter(species == "dl", trial =="1") 
-  #(trial == "1")
-
-dlTrial1Plot<- ggplot(bwFrag_dl, aes(x=timePoint, y=dryWeight))+ xlab("timePoint") +ylab("Weight") + geom_point(aes(fill = "black")) + 
-geom_smooth(method=lm) +
-  geom_line(aes(color = geno))+
-                      #geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(~geno)+
-                      ylim(0,400)
-
-dlTrial1FragPlot<-annotate_figure(dlTrial1Plot,
-               top = text_grob("dl trial 1",color = "black", face = "bold", size = "14"))                     
-                          
-
-plot(dlTrial1Plot)
+# Looking at percent change between the first and last timepoints
+***
+## I now want to just expolore how much things changed between the first and last (so far) timepoint of our experiment. Here we will be using `filter()` function from the package `dplyr` to filter our data set to just use the first and last timepoint of buoyant weight measuremnents. We are checking to ensure we have all of our cases by using the function `length()` of an arbitary column in our new dataframe. 
 
 
-bwFragPS_trial1 <- bwFrags1 %>% filter(species == "ps", trial == "1")
-bwFragPS_trial2 <- bwFrags1 %>% filter(species == "ps", trial == "2")
-bwFragPS_trial3 <- bwFrags1 %>% filter(species == "ps", trial == "3")
 
-bwFragPlotPStrial1 <- ggplot(bwFragPS_trial1, aes(x = timePoint, y = dryWeight))+
-  geom_point(aes(fill = "black"))+
-  geom_smooth(method = lm)+
-  geom_line(aes(color = geno))+
-  facet_wrap(~geno)
+```{r, firstAndLastTimepoint, include = TRUE}
 
-PSTrial1Plot <-annotate_figure(bwFragPlotPStrial1, 
-                               top = text_grob("PS Trial 1", color = "black", face = "bold", size = "14"))
-plot(PSTrial1Plot)
-
-bwFragPlotPStrial2 <- ggplot(bwFragPS_trial2, aes(x = timePoint, y = dryWeight))+
-  geom_point(aes(fill = "black"))+
-  geom_smooth(method = lm)+
-  geom_line(aes(color = geno))+
-  facet_wrap(~geno)
-
-psTrial2FragPlot <-annotate_figure(bwFragPlotPStrial2, 
-                               top = text_grob("PS Trial 2", color = "black", face = "bold", size = "14"))
-plot(psTrial2FragPlot)
-
-bwFragPlotPStrial3 <- ggplot(bwFragPS_trial3, aes(x = timePoint, y = dryWeight))+
-  geom_point(aes(fill = "black"))+
-  geom_smooth(method = lm)+
-  geom_line(aes(color = geno))+
-  facet_wrap(~geno)
-
-psTrial3FragPlot <-annotate_figure(bwFragPlotPStrial3, 
-                               top = text_grob("PS Trial 3", color = "black", face = "bold", size = "14"))
-plot(psTrial3FragPlot)
+bwFinal <- bwClean %>% 
+  dplyr::filter(timePoint %in% c("1","4")) %>%
+  select(c('timePoint','species','geno','trial','ID','dryWeight'))
 
 
+length(bwFinal$timePoint)
+
+bwChange <- dcast(bwFinal, species+geno+trial+ID~timePoint) 
+
+bwChange <- dplyr::rename(bwChange, "initialDryWeight" = "1", "finalDryWeight" = "4")
+bwChange
+
+bwChange$percentChange <- ((bwChange$finalDryWeight-bwChange$initialDryWeight)/bwChange$initialDryWeight)*100
+
+
+
+
+changePlot <- ggplot(bwChange, aes(x = geno, y = percentChange, fill = ID))+
+  geom_bar(stat = "identity")+
+  ylim(-100,100)+
+  facet_wrap(~ID)
+
+
+
+
+changeFrag <- bwChange %>% 
+  filter(ID %in% "frag")
+
+changeWild <- bwChange %>% 
+  filter(ID %in% "wild")
+
+changeFragPlot <- ggplot(changeFrag, aes(x = trial, y = percentChange, fill = geno))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  #facet_wrap(~geno)+
+  ylim(-100,300)+
+  theme(
+    axis.text.x = element_text(angle = 45)
+  )
+
+
+
+
+
+
+
+changeWildPlot <- ggplot(changeWild, aes(x = geno, y = percentChange))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  ylim(-100,300)
+
+
+
++
+  facet_wrap(geno~species)
+
+
+
+changePlotAll <- changeFragPlot | changeWildPlot
+
+bwWild <- bwClean %>% dplyr::filter(ID %in% "wild")
+
+wildPlot <- ggplot(changeWild, aes(x = percentChange, y = geno, fill = trial))+
+  geom_bar(stat = 'identity')
+  
+
+
+
+
+
+```
+
+
+
+```{r}
+weirdOnes <- bwClean %>% dplyr::filter(ID %in% "wild")
+
+weirdPlot <- ggplot(weirdOnes, aes(x = timePoint, y = dryWeight, color = geno))+
+  geom_point(size = 2)+
+  geom_line()+
+  facet_wrap(trial~ geno)+
+  labs(title = "Wild Colonies")
+
+alsoWeird <- bwClean %>% dplyr::filter(ID %in% "frag")
+
+otherWeirdPlot <- ggplot(alsoWeird, aes(x = timePoint, y = dryWeight, color = geno))+
+  geom_point(size = 2)+
+  geom_line()+
+  facet_wrap(trial~ geno)+
+  labs(title = "Frags")
+  
+  totalWeirdness <- weirdPlot + otherWeirdPlot
+  
+  ggsave("../figures/plotAnomaly.png", plot = totalWeirdness, width = 10, height = 10, units = "in", dpi = 600)
 
 ```
 
 
-#Testing segmented data to begin comparions of dryweight between species specific frags in a trial and their associated wild colony 
 
-```{r, wild-frag comparisons}
-
-bwWild_dl<- bwWild %>%
-  filter(species == "dl", trial =="1") 
-  #(trial == "1")
-
-dl1WildPlot<- ggplot(bwWild_dl, aes(x=timePoint, y=dryWeight))+ xlab("timePoint") +ylab("Weight") + geom_point(aes(fill = "black")) + 
-geom_smooth(method=lm) +
-  geom_line(aes(color = geno))+
-                      #geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(~geno)+
-                      ylim(0,2000)
-
-plot(dlTrial1WildPlot)
-
-plot(dlTrial1FragPlot)
-
-```
 
