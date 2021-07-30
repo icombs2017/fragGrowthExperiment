@@ -29,7 +29,7 @@ library(magrittr)
 ###
 
 ***
-This is the working analysis pipeline to analyze data generated from 3D models of micro-fragmented coral colonies and larger frags to assess differences in growth rates between microfragmenting and natural growth. 
+This is the working analysis pipeline to analyze data generated from 3D models of micro-fragmented coral colonies and larger frags to assess differences in growth rates between microfragments and natural growth. 
 
 ***
 
@@ -41,10 +41,32 @@ This is the working analysis pipeline to analyze data generated from 3D models o
 ## Loading required packages
 For the following analyses we will require the use of a number of different R packages. Most of which can be sourced from CRAN, but some must be downloaded from GitHub. We can use the following code to load in the packages and install any packages not previously installed in the R console. 
 
-```{r}
+
+```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork","reshape2")
+
+
+
 
 ```
 
 
+# Importing Data
+***
+## We are downloading this dataset from our GoogleDrive folder. We will be using the package `googledrive`. Each GoogleDrive file has a unique ID that does not change throughout the lifespan of the document, even if the file name is changed. This ID is housed in the file's URL. 
+Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Below you will copy and paste that into the function `drive_download` within `as_id`. This will save the file locally in the specified path (in this case our data folder) and you will import the folder as you normally would. Downloading it this way decreases the potential human error when downloading, moving folders, renaming, saving etc and ensures that the most up to date file is being utilized. 
 
 
+
+```{r, loadingData, include = TRUE}
+
+drive_download(
+  as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
+  path = "../data/bwDataset.xlsx", 
+  overwrite = TRUE)
+
+bw <- read_excel("../data/bwDataset.xlsx")
+bw
+
+```

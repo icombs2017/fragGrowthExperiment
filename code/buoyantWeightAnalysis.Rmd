@@ -321,7 +321,7 @@ wildPlot <- ggplot(changeWild, aes(x = percentChange, y = geno, fill = trial))+
 weirdOnes <- bwClean %>% dplyr::filter(ID %in% "wild")
 
 weirdPlot <- ggplot(weirdOnes, aes(x = timePoint, y = dryWeight, color = geno))+
-  geom_point(size = 5)+
+  geom_point(size = 2)+
   geom_line()+
   facet_wrap(trial~ geno)+
   labs(title = "Wild Colonies")
@@ -329,12 +329,14 @@ weirdPlot <- ggplot(weirdOnes, aes(x = timePoint, y = dryWeight, color = geno))+
 alsoWeird <- bwClean %>% dplyr::filter(ID %in% "frag")
 
 otherWeirdPlot <- ggplot(alsoWeird, aes(x = timePoint, y = dryWeight, color = geno))+
-  geom_point(size = 5)+
+  geom_point(size = 2)+
   geom_line()+
   facet_wrap(trial~ geno)+
   labs(title = "Frags")
   
   totalWeirdness <- weirdPlot + otherWeirdPlot
+  
+  ggsave("../figures/plotAnomaly.png", plot = totalWeirdness, width = 10, height = 10, units = "in", dpi = 600)
 
 ```
 
