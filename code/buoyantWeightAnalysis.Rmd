@@ -342,4 +342,102 @@ otherWeirdPlot <- ggplot(alsoWeird, aes(x = timePoint, y = dryWeight, color = ge
 
 
 
+##############################################
+##############################################
+##############################################
+##############################################
+##############################################
+##############################################
+##############################################
+##############################################
+##############################################
+##############################################
+
+### Below is Ryan's stuff, everything below here is what Ryan has been working on 
+
+#Im trying to compare growth rates within species, across trials
+
+```{r, species comparisons}
+
+bwFrags1 <- bwClean %>% dplyr::filter(ID == "frag")
+
+bwFrag_dl<- bwFrags1 %>%
+  filter(species == "dl", trial =="1") 
+  #(trial == "1")
+
+dlTrial1Plot<- ggplot(bwFrag_dl, aes(x=timePoint, y=dryWeight))+ xlab("timePoint") +ylab("Weight") + geom_point(aes(fill = "black")) + 
+geom_smooth(method=lm) +
+  geom_line(aes(color = geno))+
+                      #geom_area(aes(fill = geno, alpha = 0.5))+
+                      facet_wrap(~geno)+
+                      ylim(0,400)
+
+dlTrial1FragPlot<-annotate_figure(dlTrial1Plot,
+               top = text_grob("dl trial 1",color = "black", face = "bold", size = "14"))                     
+                          
+
+plot(dlTrial1Plot)
+
+
+bwFragPS_trial1 <- bwFrags1 %>% filter(species == "ps", trial == "1")
+bwFragPS_trial2 <- bwFrags1 %>% filter(species == "ps", trial == "2")
+bwFragPS_trial3 <- bwFrags1 %>% filter(species == "ps", trial == "3")
+
+bwFragPlotPStrial1 <- ggplot(bwFragPS_trial1, aes(x = timePoint, y = dryWeight))+
+  geom_point(aes(fill = "black"))+
+  geom_smooth(method = lm)+
+  geom_line(aes(color = geno))+
+  facet_wrap(~geno)
+
+PSTrial1Plot <-annotate_figure(bwFragPlotPStrial1, 
+                               top = text_grob("PS Trial 1", color = "black", face = "bold", size = "14"))
+plot(PSTrial1Plot)
+
+bwFragPlotPStrial2 <- ggplot(bwFragPS_trial2, aes(x = timePoint, y = dryWeight))+
+  geom_point(aes(fill = "black"))+
+  geom_smooth(method = lm)+
+  geom_line(aes(color = geno))+
+  facet_wrap(~geno)
+
+psTrial2FragPlot <-annotate_figure(bwFragPlotPStrial2, 
+                               top = text_grob("PS Trial 2", color = "black", face = "bold", size = "14"))
+plot(psTrial2FragPlot)
+
+bwFragPlotPStrial3 <- ggplot(bwFragPS_trial3, aes(x = timePoint, y = dryWeight))+
+  geom_point(aes(fill = "black"))+
+  geom_smooth(method = lm)+
+  geom_line(aes(color = geno))+
+  facet_wrap(~geno)
+
+psTrial3FragPlot <-annotate_figure(bwFragPlotPStrial3, 
+                               top = text_grob("PS Trial 3", color = "black", face = "bold", size = "14"))
+plot(psTrial3FragPlot)
+
+
+
+```
+
+
+#Testing segmented data to begin comparions of dryweight between species specific frags in a trial and their associated wild colony 
+
+```{r, wild-frag comparisons}
+
+bwWild_dl<- bwWild %>%
+  filter(species == "dl", trial =="1") 
+  #(trial == "1")
+
+dl1WildPlot<- ggplot(bwWild_dl, aes(x=timePoint, y=dryWeight))+ xlab("timePoint") +ylab("Weight") + geom_point(aes(fill = "black")) + 
+geom_smooth(method=lm) +
+  geom_line(aes(color = geno))+
+                      #geom_area(aes(fill = geno, alpha = 0.5))+
+                      facet_wrap(~geno)+
+                      ylim(0,2000)
+
+plot(dlTrial1WildPlot)
+
+plot(dlTrial1FragPlot)
+
+```
+
+
 
