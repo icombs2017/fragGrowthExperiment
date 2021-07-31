@@ -315,7 +315,26 @@ changePerm <- adonis(formula = percentChange ~ geno*ID, data = saChangeAov, meth
 changePerm
 
 
+plotFrags <- saChangeAov %>% 
+  filter(ID %in% 'frag')
+plotWilds <-saChangeAov %>% 
+  filter(ID %in% 'wild')
 
+
+percentChangeFragPlotAov <- ggplot(plotFrags, aes(x = geno, y = percentChange))+
+  geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorchid3')+
+  ylim(-50, 100)+
+  facet_wrap(trial~.)
+
+percentChangeWildPlotAov <- ggplot(plotWilds, aes(x = geno, y = percentChange))+
+ geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorange3')+
+  ylim(-50, 100)
+
+
+comboPlotAov <- percentChangeFragPlotAov + percentChangeWildPlotAov
+
+
+ggsave("../figures/Fig2.png", plot = percentChangeFragPlotAov, height = 5, width = 9, units = 'in',dpi = 600)
 
 ```
 
