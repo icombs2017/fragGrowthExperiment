@@ -62,11 +62,96 @@ Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Be
 ```{r, loadingData, include = TRUE}
 
 drive_download(
-  as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
-  path = "../data/bwDataset.xlsx", 
+  as_id("1l_cfPBmGMb7FfflpvSLBZi6Ma42Q7pr1uK_fwk0mz40"),
+  path = "../data/saDataset.xlsx", 
   overwrite = TRUE)
 
-bw <- read_excel("../data/bwDataset.xlsx")
-bw
+sa <- read_excel("../data/saDataset.xlsx")
+sa
 
 ```
+
+
+
+## Here I am going to make the corrections from the blank plugs and tiles and incorporate them into our dry weight measurements. We had a blank tile and 5 blank plugs in each raceway to account for algae growth and fouling oraganisms (mainly tube worms) fouling our corals. 
+
+
+```{r, dataManipulation, include = TRUE}
+
+sa$genotype <- as.character(sa$genotype)
+
+sa$geno <- paste0(sa$species, sa$genotype)
+
+saClean <- sa %>% 
+  select("timePoint", "species","geno", "trial", "ID", "Surface Area (cm2)") %>% 
+  dplyr::filter(species %in% c("ps", "pc", "dl")) %>% 
+  dplyr::rename("surfaceArea" = "Surface Area (cm2)")
+
+
+saClean$timePoint <- as.factor(saClean$timePoint)
+
+saClean$species <- as.factor(saClean$species)
+
+saClean$geno <- as.factor(saClean$geno)
+
+saClean$trial <- as.factor(saClean$trial)
+
+saClean$ID <- as.factor(saClean$ID)
+
+
+head(saClean)
+
+
+
+
+```
+### Splitting Data into frags and wilds
+
+
+```{r, }
+
+
+saFrag <- saClean %>% 
+  dplyr::filter(ID %in% 'frag') %>%
+  dplyr::group_by(timePoint,geno) %>% 
+  dplyr::summarise(sum(surfaceArea)) %>% 
+  dplyr::rename("surfaceArea" = "sum(surfaceArea)")
+
+
+saWild <- saClean %>% 
+  dplyr::filter(ID %in% 'wild') %>% 
+  select(timePoint, geno, surfaceArea)
+
+
+saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
+  dplyr::rename(fragSA = surfaceArea.x) %>% 
+  dplyr::rename(wildSA = surfaceArea.y)
+
+
+
+
+```
+
+
+### Visualizing Data
+
+
+```{r, plots, include = TRUE}
+
+saFragPlot <- ggplot(saFrag, aes(x = timePoint, y = surfaceArea, fill = geno))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  facet_wrap(geno~.)+
+  labs(title = 'frag')
+
+saWildPlot <- ggplot(saWild, aes(x = timePoint, y = surfaceArea, fill = geno ))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  facet_wrap(geno~.)+
+  labs(title = 'wild')
+
+
+comboPlot <- saFragPlot + saWildPlot
+
+
+
+```
+
