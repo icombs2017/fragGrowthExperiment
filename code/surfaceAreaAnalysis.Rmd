@@ -44,7 +44,7 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork","reshape2")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork","reshape2", "FSA", 'vegan', 'pairwiseAdonis')
 
 
 
@@ -84,7 +84,7 @@ sa$geno <- paste0(sa$species, sa$genotype)
 
 saClean <- sa %>% 
   select("timePoint", "species","geno", "trial", "ID", "Surface Area (cm2)") %>% 
-  dplyr::filter(species %in% c("ps", "pc", "dl")) %>% 
+  dplyr::filter(species %in% c("pc", "dl")) %>% 
   dplyr::rename("surfaceArea" = "Surface Area (cm2)")
 
 
@@ -105,29 +105,102 @@ head(saClean)
 
 
 ```
-### Splitting Data into frags and wilds
+### Here we are breaking the data apart into frags and wilds, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. 
 
 
-```{r, }
-
+```{r, calculatingPercentChange, include = TRUE }
 
 saFrag <- saClean %>% 
+  select(timePoint, geno, ID, surfaceArea) %>% 
   dplyr::filter(ID %in% 'frag') %>%
-  dplyr::group_by(timePoint,geno) %>% 
+  dplyr::group_by(timePoint,geno,ID) %>% 
   dplyr::summarise(sum(surfaceArea)) %>% 
   dplyr::rename("surfaceArea" = "sum(surfaceArea)")
 
 
 saWild <- saClean %>% 
   dplyr::filter(ID %in% 'wild') %>% 
-  select(timePoint, geno, surfaceArea)
+  select(timePoint, geno, ID, surfaceArea)
 
 
-saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
-  dplyr::rename(fragSA = surfaceArea.x) %>% 
-  dplyr::rename(wildSA = surfaceArea.y)
+# saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
+  # dplyr::rename(fragSA = surfaceArea.x) %>% 
+  # dplyr::rename(wildSA = surfaceArea.y)
+
+saCombo <- bind_rows(saFrag,saWild)
 
 
+saFinal <- saCombo %>% 
+  dplyr::filter(timePoint %in% c("0","4")) %>%
+  select(c('timePoint','geno','ID','surfaceArea'))
+
+
+length(saFinal$timePoint)
+
+saChange <- dcast(saFinal, geno+ID~timePoint) 
+
+saChange <- dplyr::rename(saChange, "initialSurfaceArea" = "0", "finalSurfaceArea" = "4")
+saChange
+saChange$percentChange <- ((saChange$finalSurfaceArea-saChange$initialSurfaceArea)/saChange$initialSurfaceArea)*100
+
+
+saFragTest <- saChange %>% 
+  select(geno, ID, percentChange) %>% 
+  dplyr::filter(ID %in% 'frag') %>%
+  dplyr::group_by(geno,ID)
+  #dplyr::summarise(sum(surfaceArea)) %>% 
+  #dplyr::rename("surfaceArea" = "sum(surfaceArea)")
+
+
+saWildTest <- saChange %>% 
+  dplyr::filter(ID %in% 'wild') %>% 
+  select(geno, ID, percentChange)
+
+
+saCombo <- left_join(saFragTest, saWildTest, by = c("geno"), copy = FALSE) %>% 
+  dplyr::rename(fragpercentChange = percentChange.x) %>% 
+  dplyr::rename(wildpercentChange = percentChange.y)
+
+
+
+
+
+
+
+
+
+
+
+
+```
+Now we will run a paired t-test to determine if the percent change in surface area of the frags varies from the wilds. First, we need to assess normality via the shapiro-wilk test for normal distribution and the Leven's Test to test for homogeneity of variance. If neither is significant, we will conduct a t-test.
+
+```{r, t-test, include = TRUE}
+
+shapiro.test(saChange$percentChange)
+LeveneTest(saFinal$surfaceArea, group = saFinal$ID)
+
+x=saCombo$fragpercentChange
+y=saCombo$wildpercentChange
+
+t.test(x, y, paired = TRUE, alternative = "two.sided")
+
+
+
+
+# 	Paired t-test
+# 
+# data:  x and y
+# t = 2.8891, df = 5, p-value = 0.03422
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+#   2.981955 51.118195
+# sample estimates:
+# mean of the differences 
+#                27.05007 
+mean(saCombo$fragpercentChange)
+
+mean(saCombo$wildpercentChange)
 
 
 ```
@@ -153,5 +226,97 @@ comboPlot <- saFragPlot + saWildPlot
 
 
 
+
+percentChangePlot <- ggplot(saChange, aes(x = geno, y = percentChange, fill = ID ))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  ylim(-50, 100)
+
+
+
+
+
+
 ```
+***
+# Further data exploration
+We are going to further explore this data while running an anova and keeping our trials separate. The data is not normally distributed (see the results of the SW test and Levene's test), so we will be running a non-parametric PERMANOVA (permutational analysis of variance) using the `adonis()` function from the package `vegan` and the accompanying post-hoc test `pairwise.adonis` using the package `pairwiseAdonis`.
+
+
+```{r}
+
+
+saFragAov <- saClean %>% 
+  select(timePoint, geno, ID, trial, surfaceArea) %>% 
+  dplyr::filter(ID %in% 'frag') %>%
+  dplyr::group_by(timePoint,geno,ID,trial)
+
+saWildAov <- saClean %>% 
+  dplyr::filter(ID %in% 'wild') %>% 
+  select(timePoint, geno, ID, trial, surfaceArea) %>% 
+  dplyr::group_by(timePoint,geno,ID,trial)
+
+
+# saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
+  # dplyr::rename(fragSA = surfaceArea.x) %>% 
+  # dplyr::rename(wildSA = surfaceArea.y)
+
+saComboAov <- bind_rows(saFragAov,saWildAov)
+
+
+saFinalAov <- saComboAov %>% 
+  dplyr::filter(timePoint %in% c("0","4")) %>%
+  select(c('timePoint','geno','ID','trial','surfaceArea'))
+
+
+saChangeAov <- dcast(saFinalAov, geno+ID+trial~timePoint) 
+
+saChangeAov <- dplyr::rename(saChangeAov, "initialSurfaceArea" = "0", "finalSurfaceArea" = "4")
+saChangeAov
+saChangeAov$percentChange <- ((saChangeAov$finalSurfaceArea-saChangeAov$initialSurfaceArea)/saChangeAov$initialSurfaceArea)*100
+
+
+saFragTestAov <- saChangeAov %>% 
+  select(geno, ID, percentChange) %>% 
+  dplyr::filter(ID %in% 'frag') %>%
+  dplyr::group_by(geno,ID)
+  #dplyr::summarise(sum(surfaceArea)) %>% 
+  #dplyr::rename("surfaceArea" = "sum(surfaceArea)")
+
+
+saWildTestAov <- saChangeAov %>% 
+  dplyr::filter(ID %in% 'wild') %>% 
+  select(geno, ID, percentChange)
+
+
+saComboAov <- left_join(saFragTestAov, saWildTestAov, by = c("geno"), copy = FALSE) %>% 
+  dplyr::rename(fragpercentChange = percentChange.x) %>% 
+  dplyr::rename(wildpercentChange = percentChange.y)
+
+shapiro.test(saFinalAov$surfaceArea)
+LeveneTest(saFinalAov$surfaceArea, group = saFinalAov$ID)
+
+
+kruskal.test(percentChange ~ ID, data = saChangeAov)
+
+dunnTest(percentChange ~ ID, data = saChangeAov)
+
+
+
+summary(aov(percentChange ~ ID * geno, data = saChangeAov))
+
+# running the PERMANOVA
+set.seed(999)
+changePerm <- adonis(formula = percentChange ~ geno*ID, data = saChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
+changePerm
+
+
+
+
+```
+
+
+
+
+
+
 
