@@ -73,7 +73,7 @@ sa
 
 
 
-## Here I am going to make the corrections from the blank plugs and tiles and incorporate them into our dry weight measurements. We had a blank tile and 5 blank plugs in each raceway to account for algae growth and fouling oraganisms (mainly tube worms) fouling our corals. 
+## Now I am just tidying up my dataset, I am combining two columns, **species** and **genotype** into a column **geno** using the `paste0` function, cleaning up the raw dataset to only include my species of concern using multiple functions from the package `dplyr`, and changing the class of some variables to factors using the function `as.factor()` for easier manipulation down the road. 
 
 
 ```{r, dataManipulation, include = TRUE}
@@ -105,7 +105,7 @@ head(saClean)
 
 
 ```
-### Here we are breaking the data apart into frags and wilds, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. 
+### Here we are breaking the data apart into frags and wilds, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2` 
 
 
 ```{r, calculatingPercentChange, include = TRUE }
@@ -173,6 +173,8 @@ saCombo <- left_join(saFragTest, saWildTest, by = c("geno"), copy = FALSE) %>%
 
 
 ```
+
+
 Now we will run a paired t-test to determine if the percent change in surface area of the frags varies from the wilds. First, we need to assess normality via the shapiro-wilk test for normal distribution and the Leven's Test to test for homogeneity of variance. If neither is significant, we will conduct a t-test.
 
 ```{r, t-test, include = TRUE}
@@ -208,21 +210,23 @@ mean(saCombo$wildpercentChange)
 
 ### Visualizing Data
 
+We are visualizing the data as bar graphs using the package `ggplot2`
+
 
 ```{r, plots, include = TRUE}
 
-saFragPlot <- ggplot(saFrag, aes(x = timePoint, y = surfaceArea, fill = geno))+
-  geom_bar(stat = 'identity', position = 'dodge')+
-  facet_wrap(geno~.)+
-  labs(title = 'frag')
-
-saWildPlot <- ggplot(saWild, aes(x = timePoint, y = surfaceArea, fill = geno ))+
-  geom_bar(stat = 'identity', position = 'dodge')+
-  facet_wrap(geno~.)+
-  labs(title = 'wild')
-
-
-comboPlot <- saFragPlot + saWildPlot
+# saFragPlot <- ggplot(saFrag, aes(x = timePoint, y = surfaceArea, fill = geno))+
+#   geom_bar(stat = 'identity', position = 'dodge')+
+#   facet_wrap(geno~.)+
+#   labs(title = 'frag')
+# 
+# saWildPlot <- ggplot(saWild, aes(x = timePoint, y = surfaceArea, fill = geno ))+
+#   geom_bar(stat = 'identity', position = 'dodge')+
+#   facet_wrap(geno~.)+
+#   labs(title = 'wild')
+# 
+# 
+# comboPlot <- saFragPlot + saWildPlot
 
 
 
@@ -232,6 +236,7 @@ percentChangePlot <- ggplot(saChange, aes(x = geno, y = percentChange, fill = ID
   ylim(-50, 100)
 
 
+ggsave("../figures/Fig1.png", plot = percentChangePlot, height = 5, width = 9, units = 'in',dpi = 600)
 
 
 
@@ -242,7 +247,7 @@ percentChangePlot <- ggplot(saChange, aes(x = geno, y = percentChange, fill = ID
 We are going to further explore this data while running an anova and keeping our trials separate. The data is not normally distributed (see the results of the SW test and Levene's test), so we will be running a non-parametric PERMANOVA (permutational analysis of variance) using the `adonis()` function from the package `vegan` and the accompanying post-hoc test `pairwise.adonis` using the package `pairwiseAdonis`.
 
 
-```{r}
+```{r, PERMANOVA, include = TRUE}
 
 
 saFragAov <- saClean %>% 
