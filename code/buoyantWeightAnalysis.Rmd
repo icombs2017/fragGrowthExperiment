@@ -369,10 +369,7 @@ geom_smooth(method=lm) +
                       ylim(0,400)
 
 dlTrial1FragPlot<-annotate_figure(dlTrial1Plot,
-               top = text_grob("dl trial 1",color = "black", face = "bold", size = "14"))                     
-                          
-
-plot(dlTrial1Plot)
+               top = text_grob("dl trial 1",color = "black", face = "bold", size = "14"))                   
 
 
 bwFragPS_trial1 <- bwFrags1 %>% filter(species == "ps", trial == "1")
@@ -387,7 +384,7 @@ bwFragPlotPStrial1 <- ggplot(bwFragPS_trial1, aes(x = timePoint, y = dryWeight))
 
 PSTrial1Plot <-annotate_figure(bwFragPlotPStrial1, 
                                top = text_grob("PS Trial 1", color = "black", face = "bold", size = "14"))
-plot(PSTrial1Plot)
+
 
 bwFragPlotPStrial2 <- ggplot(bwFragPS_trial2, aes(x = timePoint, y = dryWeight))+
   geom_point(aes(fill = "black"))+
@@ -397,7 +394,7 @@ bwFragPlotPStrial2 <- ggplot(bwFragPS_trial2, aes(x = timePoint, y = dryWeight))
 
 psTrial2FragPlot <-annotate_figure(bwFragPlotPStrial2, 
                                top = text_grob("PS Trial 2", color = "black", face = "bold", size = "14"))
-plot(psTrial2FragPlot)
+
 
 bwFragPlotPStrial3 <- ggplot(bwFragPS_trial3, aes(x = timePoint, y = dryWeight))+
   geom_point(aes(fill = "black"))+
@@ -407,8 +404,6 @@ bwFragPlotPStrial3 <- ggplot(bwFragPS_trial3, aes(x = timePoint, y = dryWeight))
 
 psTrial3FragPlot <-annotate_figure(bwFragPlotPStrial3, 
                                top = text_grob("PS Trial 3", color = "black", face = "bold", size = "14"))
-plot(psTrial3FragPlot)
-
 
 
 ```
@@ -429,11 +424,22 @@ geom_smooth(method=lm) +
                       facet_wrap(~geno)+
                       ylim(0,2000)
 
-plot(dlTrial1WildPlot)
-
-plot(dlTrial1FragPlot)
 
 ```
 
+[Copy from SA DATA ANALYSIS]
+Now we will run a paired t-test to determine if the percent change in weight of the frags varies from the wilds. First, we need to assess normality via the shapiro-wilk test for normal distribution and the Leven's Test to test for homogeneity of variance. If neither is significant, we will conduct a t-test.
+
+```{r, t-test, include = TRUE}
+shapiro.test(bwChange$percentChange)
+LeveneTest(bwChange$finalDryWeight, group = bwChange$ID)
+
+x=changeFrag$percentChange
+y=changeWild$percentChange
+
+t.test(x, y, paired = TRUE, alternative = "two.sided")
 
 
+
+
+```
