@@ -61,10 +61,10 @@ Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Be
 
 ```{r, loadingData, include = TRUE}
 
-drive_download(
-  as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
-  path = "../data/bwDataset.xlsx", 
-  overwrite = TRUE)
+#drive_download(
+  #as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
+  #path = "../data/bwDataset.xlsx", 
+  #overwrite = TRUE)
 
 bw <- read_excel("../data/bwDataset.xlsx")
 bw
@@ -166,7 +166,7 @@ bwCleanFrags <- bwClean %>%
 bwCleanWild <- bwClean %>% 
   dplyr::filter(ID %in% "wild")
 
-bwcleanFrags$adjWeight <- bwcleanFrags$dryWeight - bwClean
+bwcleanFrags$adjWeight <- bwCleanFrags$dryWeight - bwClean
 
 ```
 
@@ -292,12 +292,8 @@ changeFragPlot <- ggplot(changeFrag, aes(x = trial, y = percentChange, fill = ge
 
 changeWildPlot <- ggplot(changeWild, aes(x = geno, y = percentChange))+
   geom_bar(stat = 'identity', position = 'dodge')+
+  facet_wrap(geno~species)+
   ylim(-100,300)
-
-
-
-+
-  facet_wrap(geno~species)
 
 
 
@@ -362,7 +358,7 @@ otherWeirdPlot <- ggplot(alsoWeird, aes(x = timePoint, y = dryWeight, color = ge
 bwFrags1 <- bwClean %>% dplyr::filter(ID == "frag")
 
 bwFrag_dl<- bwFrags1 %>%
-  filter(species == "dl", trial =="1") 
+  filter(s1pecies == "dl", trial =="1") 
   #(trial == "1")
 
 dlTrial1Plot<- ggplot(bwFrag_dl, aes(x=timePoint, y=dryWeight))+ xlab("timePoint") +ylab("Weight") + geom_point(aes(fill = "black")) + 

@@ -84,7 +84,7 @@ sa$geno <- paste0(sa$species, sa$genotype)
 
 saClean <- sa %>% 
   select("timePoint", "species","geno", "trial", "ID", "Surface Area (cm2)") %>% 
-  dplyr::filter(species %in% c("pc", "dl")) %>% 
+  dplyr::filter(species %in% c("pc", "dl", "ps")) %>% 
   dplyr::rename("surfaceArea" = "Surface Area (cm2)")
 
 
@@ -313,7 +313,7 @@ summary(aov(percentChange ~ ID * geno, data = saChangeAov))
 set.seed(999)
 changePerm <- adonis(formula = percentChange ~ geno*ID, data = saChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
 changePerm
-
+co
 
 plotFrags <- saChangeAov %>% 
   filter(ID %in% 'frag')
