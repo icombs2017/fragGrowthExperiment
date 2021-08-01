@@ -439,6 +439,8 @@ y=changeWild$percentChange
 
 t.test(x, y, paired = TRUE, alternative = "two.sided")
 
+summary(aov(changeFrag$percentChange))
+
 
 
 
