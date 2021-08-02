@@ -109,7 +109,6 @@ head(saClean)
 
 
 ```{r, calculatingPercentChange, include = TRUE }
-
 saFrag <- saClean %>% 
   select(timePoint, geno, ID, surfaceArea) %>% 
   dplyr::filter(ID %in% 'frag') %>%
@@ -300,20 +299,20 @@ saComboAov <- left_join(saFragTestAov, saWildTestAov, by = c("geno"), copy = FAL
 shapiro.test(saFinalAov$surfaceArea)
 LeveneTest(saFinalAov$surfaceArea, group = saFinalAov$ID)
 
+# 
+# kruskal.test(percentChange ~ ID, data = saChangeAov)
+# 
+# dunnTest(percentChange ~ ID, data = saChangeAov)
 
-kruskal.test(percentChange ~ ID, data = saChangeAov)
-
-dunnTest(percentChange ~ ID, data = saChangeAov)
 
 
-
-summary(aov(percentChange ~ ID * geno, data = saChangeAov))
+# summary(aov(percentChange ~ ID * geno, data = saChangeAov))
 
 # running the PERMANOVA
 set.seed(999)
-changePerm <- adonis(formula = percentChange ~ geno*ID, data = saChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
-changePerm
-co
+changePermSA <- adonis(formula = percentChange ~ geno*ID, data = saChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
+changePermSA
+
 
 plotFrags <- saChangeAov %>% 
   filter(ID %in% 'frag')
@@ -321,20 +320,20 @@ plotWilds <-saChangeAov %>%
   filter(ID %in% 'wild')
 
 
-percentChangeFragPlotAov <- ggplot(plotFrags, aes(x = geno, y = percentChange))+
+percentChangeFragPlotAovSA <- ggplot(plotFrags, aes(x = geno, y = percentChange))+
   geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorchid3')+
   ylim(-50, 100)+
   facet_wrap(trial~.)
 
-percentChangeWildPlotAov <- ggplot(plotWilds, aes(x = geno, y = percentChange))+
+percentChangeWildPlotAovSA <- ggplot(plotWilds, aes(x = geno, y = percentChange))+
  geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorange3')+
   ylim(-50, 100)
 
 
-comboPlotAov <- percentChangeFragPlotAov + percentChangeWildPlotAov
+comboPlotAovSA <- percentChangeFragPlotAovSA + percentChangeWildPlotAovSA
 
 
-ggsave("../figures/Fig2.png", plot = percentChangeFragPlotAov, height = 5, width = 9, units = 'in',dpi = 600)
+ggsave("../figures/Fig3.png", plot = percentChangeFragPlotAov, height = 5, width = 9, units = 'in',dpi = 600)
 
 ```
 
