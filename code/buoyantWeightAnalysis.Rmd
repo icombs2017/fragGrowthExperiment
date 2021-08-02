@@ -166,7 +166,7 @@ bwCleanFrags <- bwClean %>%
 bwCleanWild <- bwClean %>% 
   dplyr::filter(ID %in% "wild")
 
-bwcleanFrags$adjWeight <- bwCleanFrags$dryWeight - bwClean
+# bwcleanFrags$adjWeight <- bwCleanFrags$dryWeight - bwClean
 
 ```
 
@@ -454,14 +454,14 @@ summary(aov(changeFrag$percentChange))
 ```{r, PERMANOVA, include = TRUE}
 
 bwFragAov <- bwClean %>% 
-  select(timePoint, geno, ID, trial, dryWeight) %>% 
+  select(timePoint, species, geno, ID, trial, dryWeight) %>% 
   dplyr::filter(ID %in% 'frag') %>%
-  dplyr::group_by(timePoint,geno,ID,trial)
+  dplyr::group_by(timePoint,species,geno,ID,trial)
 
 bwWildAov <- bwClean %>% 
   dplyr::filter(ID %in% 'wild') %>% 
-  select(timePoint, geno, ID, trial, dryWeight) %>% 
-  dplyr::group_by(timePoint,geno,ID,trial)
+  select(timePoint, species,geno, ID, trial, dryWeight) %>% 
+  dplyr::group_by(timePoint,species,geno,ID,trial)
 
 
 # saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
@@ -473,10 +473,10 @@ bwComboAov <- bind_rows(bwFragAov,bwWildAov)
 
 bwFinalAov <- bwComboAov %>% 
   dplyr::filter(timePoint %in% c("0","4")) %>%
-  select(c('timePoint','geno','ID','trial','dryWeight'))
+  select(c('timePoint','species','geno','ID','trial','dryWeight'))
 
 
-bwChangeAov <- dcast(bwFinalAov, geno+ID+trial~timePoint) 
+bwChangeAov <- dcast(bwFinalAov, species+geno+ID+trial~timePoint) 
 
 bwChangeAov <- dplyr::rename(bwChangeAov, "initialdryWeight" = "0", "finalDryWeight" = "4")
 bwChangeAov
@@ -484,7 +484,7 @@ bwChangeAov$percentChange <- ((bwChangeAov$finalDryWeight-bwChangeAov$initialdry
 
 
 bwFragTestAov <- bwChangeAov %>% 
-  select(geno, ID, percentChange) %>% 
+  select(species,geno, ID, percentChange) %>% 
   dplyr::filter(ID %in% 'frag') %>%
   dplyr::group_by(geno,ID)
   #dplyr::summarise(sum(surfaceArea)) %>% 
@@ -493,7 +493,7 @@ bwFragTestAov <- bwChangeAov %>%
 
 bwWildTestAov <- bwChangeAov %>% 
   dplyr::filter(ID %in% 'wild') %>% 
-  select(geno, ID, percentChange)
+  select(species,geno, ID, percentChange)
 
 
 bwComboAov <- left_join(bwFragTestAov, bwWildTestAov, by = c("geno"), copy = FALSE) %>% 
@@ -514,7 +514,7 @@ LeveneTest(bwFinalAov$dryWeight, group = bwFinalAov$ID)
 
 # running the PERMANOVA
 set.seed(999)
-changePermBW <- adonis(formula = percentChange ~ geno*ID, data = bwChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
+changePermBW <- adonis(formula = percentChange ~ species*geno*ID, data = bwChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
 changePermBW
 
 mean(bwComboAov$fragpercentChange)
