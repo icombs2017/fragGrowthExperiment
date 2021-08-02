@@ -314,6 +314,11 @@ changePermSA <- adonis(formula = percentChange ~ geno*ID, data = saChangeAov, me
 changePermSA
 
 
+mean(saCombo$fragpercentChange)
+
+mean(saCombo$wildpercentChange)
+
+
 plotFrags <- saChangeAov %>% 
   filter(ID %in% 'frag')
 plotWilds <-saChangeAov %>% 
@@ -334,6 +339,10 @@ comboPlotAovSA <- percentChangeFragPlotAovSA + percentChangeWildPlotAovSA
 
 
 ggsave("../figures/Fig3.png", plot = percentChangeFragPlotAov, height = 5, width = 9, units = 'in',dpi = 600)
+
+
+
+
 
 ```
 
