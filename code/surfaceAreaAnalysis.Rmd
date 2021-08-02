@@ -250,14 +250,14 @@ We are going to further explore this data while running an anova and keeping our
 
 
 saFragAov <- saClean %>% 
-  select(timePoint, geno, ID, trial, surfaceArea) %>% 
+  select(timePoint, species,geno, ID, trial, surfaceArea) %>% 
   dplyr::filter(ID %in% 'frag') %>%
-  dplyr::group_by(timePoint,geno,ID,trial)
+  dplyr::group_by(timePoint,species,geno,ID,trial)
 
 saWildAov <- saClean %>% 
   dplyr::filter(ID %in% 'wild') %>% 
-  select(timePoint, geno, ID, trial, surfaceArea) %>% 
-  dplyr::group_by(timePoint,geno,ID,trial)
+  select(timePoint, species,geno, ID, trial, surfaceArea) %>% 
+  dplyr::group_by(timePoint,species,geno,ID,trial)
 
 
 # saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
@@ -269,10 +269,10 @@ saComboAov <- bind_rows(saFragAov,saWildAov)
 
 saFinalAov <- saComboAov %>% 
   dplyr::filter(timePoint %in% c("0","4")) %>%
-  select(c('timePoint','geno','ID','trial','surfaceArea'))
+  select(c('timePoint','species','geno','ID','trial','surfaceArea'))
 
 
-saChangeAov <- dcast(saFinalAov, geno+ID+trial~timePoint) 
+saChangeAov <- dcast(saFinalAov, species+geno+ID+trial~timePoint) 
 
 saChangeAov <- dplyr::rename(saChangeAov, "initialSurfaceArea" = "0", "finalSurfaceArea" = "4")
 saChangeAov
@@ -280,7 +280,7 @@ saChangeAov$percentChange <- ((saChangeAov$finalSurfaceArea-saChangeAov$initialS
 
 
 saFragTestAov <- saChangeAov %>% 
-  select(geno, ID, percentChange) %>% 
+  select(species,geno, ID, percentChange) %>% 
   dplyr::filter(ID %in% 'frag') %>%
   dplyr::group_by(geno,ID)
   #dplyr::summarise(sum(surfaceArea)) %>% 
@@ -289,7 +289,7 @@ saFragTestAov <- saChangeAov %>%
 
 saWildTestAov <- saChangeAov %>% 
   dplyr::filter(ID %in% 'wild') %>% 
-  select(geno, ID, percentChange)
+  select(species,geno, ID, percentChange)
 
 
 saComboAov <- left_join(saFragTestAov, saWildTestAov, by = c("geno"), copy = FALSE) %>% 
@@ -310,8 +310,15 @@ LeveneTest(saFinalAov$surfaceArea, group = saFinalAov$ID)
 
 # running the PERMANOVA
 set.seed(999)
-changePermSA <- adonis(formula = percentChange ~ geno*ID, data = saChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
+changePermSA <- adonis(formula = percentChange ~ species*geno*ID, data = saChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
 changePermSA
+
+
+set.seed(999)
+changePairwise <- pairwise.adonis(saChangeAov[c(7)],factors=saChangeAov$species,
+                             sim.method='euclidian',p.adjust.m='bonferroni', perm = 9999)
+changePairwise
+
 
 
 mean(saCombo$fragpercentChange)
