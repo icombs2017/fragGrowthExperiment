@@ -453,8 +453,6 @@ summary(aov(changeFrag$percentChange))
 
 ```{r, PERMANOVA, include = TRUE}
 
-
-
 bwFragAov <- bwClean %>% 
   select(timePoint, geno, ID, trial, dryWeight) %>% 
   dplyr::filter(ID %in% 'frag') %>%
@@ -519,6 +517,9 @@ set.seed(999)
 changePermBW <- adonis(formula = percentChange ~ geno*ID, data = bwChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
 changePermBW
 
+mean(bwComboAov$fragpercentChange)
+mean(bwComboAov$wildpercentChange)
+
 
 plotFrags <- bwChangeAov %>% 
   filter(ID %in% 'frag')
@@ -527,13 +528,13 @@ plotWilds <-bwChangeAov %>%
 
 
 percentChangeFragPlotAovBW <- ggplot(plotFrags, aes(x = geno, y = percentChange))+
-  geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorchid3')+
-  ylim(-10, 100)+
+  geom_bar(stat = 'identity', position = 'dodge', fill = 'darkblue')+
+  ylim(-10, 50)+
   facet_wrap(trial~.)
 
 percentChangeWildPlotAovBW <- ggplot(plotWilds, aes(x = geno, y = percentChange))+
- geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorange3')+
-  ylim(-10, 100)
+ geom_bar(stat = 'identity', position = 'dodge', fill = 'navy')+
+  ylim(-10, 50)
 
 
 comboPlotAovBW <- percentChangeFragPlotAovBW + percentChangeWildPlotAovBW
@@ -541,9 +542,47 @@ comboPlotAovBW <- percentChangeFragPlotAovBW + percentChangeWildPlotAovBW
 
 ggsave("../figures/Fig2.png", plot = percentChangeFragPlotAov, height = 5, width = 9, units = 'in',dpi = 600)
 
+```
+
+```{r, plotChange, include=TRUE}
+
+percentChangeFragPlotAovBW <- percentChangeFragPlotAovBW + 
+  labs(title = "Skeletal Deposition of Microfragments", 
+       subtitle = "Graph of Percent Change in Buoyant Weight by Species and Genotype", 
+       x= "Coral Species and Genotype", 
+       y= "Buoyant Weight Percent Change")
+
+percentChangeFragPlotAovBW <- percentChangeFragPlotAovBW + theme(
+  plot.title = element_text(color = "black", size = 20, 
+                            face = "bold", hjust = 0.5),
+  plot.subtitle = element_text(color = "black", size = 12,
+                               hjust = 0.5),
+  axis.title.x = element_text(face = "bold"),
+  axis.title.y = element_text(face = "bold"),
+  axis.text.x = element_text(angle = 45),
+)
+ 
+percentChangeWildPlotAovBW <- percentChangeWildPlotAovBW + 
+  labs(title = "Skeletal Deposition of Wild Colonies", 
+       subtitle = "Graph of Percent Change in Buoyant Weight by Species and Genotype", 
+       x= "Coral Species and Genotype", 
+       y= "Buoyant Weight Percent Change")
+
+percentChangeWildPlotAovBW <- percentChangeWildPlotAovBW + theme(
+  plot.title = element_text(color = "black", size = 20, 
+                            face = "bold", hjust = 0.5),
+  plot.subtitle = element_text(color = "black", size = 12,
+                               hjust = 0.5),
+  axis.title.x = element_text(face = "bold"),
+  axis.title.y = element_text(face = "bold"),
+  axis.text.x = element_text(angle = 45),
+)
 
 
 
 
 ```
+
+
+
 
