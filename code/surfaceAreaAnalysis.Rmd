@@ -333,13 +333,13 @@ plotWilds <-saChangeAov %>%
 
 
 percentChangeFragPlotAovSA <- ggplot(plotFrags, aes(x = geno, y = percentChange))+
-  geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorchid3')+
-  ylim(-50, 100)+
+  geom_bar(stat = 'identity', position = 'dodge', fill = "darkblue")+
+  ylim(-25, 100)+
   facet_wrap(trial~.)
 
 percentChangeWildPlotAovSA <- ggplot(plotWilds, aes(x = geno, y = percentChange))+
- geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorange3')+
-  ylim(-50, 100)
+ geom_bar(stat = 'identity', position = 'dodge', fill = 'navy')+
+  ylim(-25, 100)
 
 
 comboPlotAovSA <- percentChangeFragPlotAovSA + percentChangeWildPlotAovSA
@@ -347,13 +347,51 @@ comboPlotAovSA <- percentChangeFragPlotAovSA + percentChangeWildPlotAovSA
 
 ggsave("../figures/Fig3.png", plot = percentChangeFragPlotAov, height = 5, width = 9, units = 'in',dpi = 600)
 
+```
+
+#Making stylistic changes to the surface area plots
+
+```{r, plotChange, include= TRUE}
+percentChangeFragPlotAovSA <- percentChangeFragPlotAovSA + 
+  labs(title = "Tissue Growth of Microfragments", 
+       subtitle = "Graph of Percent Change in Tissue Surface Area by Species and Genotype", 
+       x= "Coral Species and Genotype", 
+       y= "Tissue Surface Area Percent Change")
+
+percentChangeFragPlotAovSA <- percentChangeFragPlotAovSA + theme(
+  plot.title = element_text(color = "black", size = 20, 
+                            face = "bold", hjust = 0.5),
+  plot.subtitle = element_text(color = "black", size = 12,
+                               hjust = 0.5),
+  axis.title.x = element_text(face = "bold"),
+  axis.title.y = element_text(face = "bold"),
+  axis.text.x = element_text(angle = 45),
+)
+ 
+percentChangeWildPlotAovSA <- percentChangeWildPlotAovSA + 
+  labs(title = "Tissue Growth of Wild Colonies", 
+       subtitle = "Graph of Percent Change in Tissue Surface Area by Species and Genotype", 
+       x= "Coral Species and Genotype", 
+       y= "Tissue Surface Area Percent Change")
+
+percentChangeWildPlotAovSA <- percentChangeWildPlotAovSA + theme(
+  plot.title = element_text(color = "black", size = 20, 
+                            face = "bold", hjust = 0.5),
+  plot.subtitle = element_text(color = "black", size = 12,
+                               hjust = 0.5),
+  axis.title.x = element_text(face = "bold"),
+  axis.title.y = element_text(face = "bold"),
+  axis.text.x = element_text(angle = 45),
+)
+
+comboPlotAovSA <- comboPlotAovSA + labs(title = "Tissue Growth ", 
+                                        subtitle = "Percent Change of Tissue Surface Area")
+
 
 
 
 
 ```
-
-
 
 
 
