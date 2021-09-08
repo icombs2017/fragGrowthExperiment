@@ -520,6 +520,14 @@ changePermBW <- adonis(formula = percentChange ~ species*geno*ID, data = bwChang
 changePermBW
 
 
+
+mean(bwComboAov$fragpercentChange)
+
+mean(bwComboAov$wildpercentChange)
+
+
+
+
 plotFrags <- bwChangeAov %>% 
   filter(ID %in% 'frag')
 plotWilds <-bwChangeAov %>% 
@@ -530,7 +538,6 @@ percentChangeFragPlotAovBW <- ggplot(plotFrags, aes(x = geno, y = percentChange)
   geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorchid3')+
   ylim(-10, 100)+
   facet_wrap(trial~.)
-
 percentChangeWildPlotAovBW <- ggplot(plotWilds, aes(x = geno, y = percentChange))+
  geom_bar(stat = 'identity', position = 'dodge', fill = 'darkorange3')+
   ylim(-10, 100)
