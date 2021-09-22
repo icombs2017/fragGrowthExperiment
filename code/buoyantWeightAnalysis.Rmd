@@ -61,10 +61,10 @@ Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Be
 
 ```{r, loadingData, include = TRUE}
 
-#drive_download(
-  #as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
-  #path = "../data/bwDataset.xlsx", 
-  #overwrite = TRUE)
+drive_download(
+as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
+path = "../data/bwDataset.xlsx",
+overwrite = TRUE)
 
 bw <- read_excel("../data/bwDataset.xlsx")
 bw
@@ -178,7 +178,7 @@ bwCleanWild <- bwClean %>%
 ```{r, splittingData, include = TRUE}
 
 
-bwFrags <- bwClean %>% dplyr::filter(ID %in% "frag") %>% select(c("timePoint", "species", "geno", "trial", "ID", "dryWeight")) %>% group_by(timePoint, geno) %>% summarise_at(vars(dryWeight), mean)
+bwFrags <- bwClean %>% dplyr::filter(ID %in% "frag") %>% select(c("timePoint", "species", "geno", "trial", "ID", "dryWeight")) %>% group_by(timePoint, geno) #%>% summarise_at(vars(dryWeight), mean)
 
 head(bwFrags)
 
@@ -217,7 +217,7 @@ bwFragPlot <- ggplot(bwFrags, aes(timePoint, dryWeight))+
                       geom_point(aes(fill = "black"))+
                       geom_line(aes(color = geno))+
                       #geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(~geno)+
+                      facet_wrap(trial~geno)+
                       ylim(0,400)
   bwFragPlot
  ggsave("../figures/frags.png", plot = bwFragPlot, height = 5, width = 9, units = 'in',dpi = 600)
