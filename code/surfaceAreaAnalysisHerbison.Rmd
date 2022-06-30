@@ -1,0 +1,66 @@
+---
+title: "Surface Growth Analysis"
+author: "Kamryn Herbison -- ENTER EMAIL HERE"
+output:
+  html_document:
+    theme: flatly
+    code_folding: show
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_doctument:
+      toc: yes
+      toc_depth: 3
+---
+```{r, setup, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, fig.align = 'left')
+library(magrittr)
+```
+
+### version: `r Sys.Date() %>% format(format="%B %d, %Y")`
+
+[![DOI](https://zenodo.org/badge/255665897.svg)](https://zenodo.org/badge/latestdoi/255665897)
+
+
+
+#### [GitHub repository](https://github.com/icombs2017/analysisOf3dModels.git){target="_blank"}
+
+
+###
+***
+This is the analysis pipeline to analyze data generated from 3D models of fate tracked *Montastraea cavernosa* infected with stony coral tissue loss disease. For the manuscript **Combs IR, Studivan MS, Voss JD. (2020) 
+
+***
+
+### All analyses performed with R version `r getRversion()`
+
+
+# Basic setup of R environment
+***
+## Loading required packages
+For the following analyses we will require the use of a number of different R packages. Most of which can be sourced from CRAN, but some must be downloaded from GitHub. We can use the following code to load in the packages and install any packages not previously installed in the R console. 
+
+```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load("ggplot2", "FSA", "officer", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "nparcomp", "RVAideMemoire", "pairwiseAdonis", "PMCMR", "PMCMRplus", "patchwork", "magrittr","reshape2", "stringr", "dplyr", "flextable", "permuco")
+pacman::p_load_gh("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+```
+<br><br>
+
+
+```{r}
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
