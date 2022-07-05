@@ -19,6 +19,10 @@ options(width = 88)
 library(magrittr)
 ```
 
+
+
+
+
 ### version: `r Sys.Date() %>% format(format="%B %d, %Y")`
 
 <!-- this is where the DOI would go  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3675991.svg)](https://doi.org/10.5281/zenodo.3675991)
@@ -44,12 +48,12 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork","reshape2", "FSA", 'vegan', 'pairwiseAdonis')
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork", "FSA")
 
-
-
+#IF YOU WANT TO RUN PAIRWISE PERMANOVA REMEMBER TO INSTALL PAIRWISE ADONIS
 
 ```
+
 
 
 # Importing Data
@@ -61,13 +65,18 @@ Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Be
 
 ```{r, loadingData, include = TRUE}
 
+  # as_id("1l_cfPBmGMb7FfflpvSLBZi6Ma42Q7pr1uK_fwk0mz40"),
+
+
 drive_download(
-  as_id("1l_cfPBmGMb7FfflpvSLBZi6Ma42Q7pr1uK_fwk0mz40"),
+  as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
   path = "../data/saDataset.xlsx", 
   overwrite = TRUE)
 
-sa <- read_excel("../data/saDataset.xlsx")
+sa <- read_excel("../data/saDataset.xlsx", sheet = 2)
+
 sa
+
 
 ```
 
@@ -78,29 +87,36 @@ sa
 
 ```{r, dataManipulation, include = TRUE}
 
-sa$genotype <- as.character(sa$genotype)
+# Combined the two columns in excel, keeping the paste0 code just in case
+# sa$genotype <- as.character(sa$genotype)
+# 
+# sa$geno <- paste0(sa$species, sa$genotype)
 
-sa$geno <- paste0(sa$species, sa$genotype)
+# saClean <- sa %>% 
+#   select("timePoint", "species","geno", "trial", "ID", "Surface Area (cm2)") %>% 
+#   dplyr::filter(species %in% c("pc", "dl", "ps")) %>% 
+#   dplyr::rename("surfaceArea" = "Surface Area (cm2)")
 
 saClean <- sa %>% 
-  select("timePoint", "species","geno", "trial", "ID", "Surface Area (cm2)") %>% 
-  dplyr::filter(species %in% c("pc", "dl", "ps")) %>% 
-  dplyr::rename("surfaceArea" = "Surface Area (cm2)")
+  select("timepoint", "species", "genotype","id","trial","treatment","SA")
 
 
-saClean$timePoint <- as.factor(saClean$timePoint)
+
+
+saClean$timepoint <- as.factor(saClean$timepoint)
 
 saClean$species <- as.factor(saClean$species)
 
-saClean$geno <- as.factor(saClean$geno)
+saClean$id <- as.factor(saClean$id)
 
 saClean$trial <- as.factor(saClean$trial)
 
-saClean$ID <- as.factor(saClean$ID)
+saClean$treatment <- as.factor(saClean$treatment)
+
+# saClean$ID <- as.factor(saClean$ID)
 
 
 head(saClean)
-
 
 
 
@@ -109,62 +125,86 @@ head(saClean)
 
 
 ```{r, calculatingPercentChange, include = TRUE }
-saFrag <- saClean %>% 
-  select(timePoint, geno, ID, surfaceArea) %>% 
-  dplyr::filter(ID %in% 'frag') %>%
-  dplyr::group_by(timePoint,geno,ID) %>% 
-  dplyr::summarise(sum(surfaceArea)) %>% 
-  dplyr::rename("surfaceArea" = "sum(surfaceArea)")
+# saFrag <- saClean %>% 
+#   select(timePoint, geno, ID, surfaceArea) %>% 
+#   dplyr::filter(ID %in% 'frag') %>%
+#   dplyr::group_by(timePoint,geno,ID) %>% 
+#   dplyr::summarise(sum(surfaceArea)) %>% 
+#   dplyr::rename("surfaceArea" = "sum(surfaceArea)")
 
 
-saWild <- saClean %>% 
-  dplyr::filter(ID %in% 'wild') %>% 
-  select(timePoint, geno, ID, surfaceArea)
+saFrag <- saClean %>%
+  select(timepoint, species, id, treatment, SA) %>%
+  dplyr::filter(treatment %in% 'frag') %>%
+  dplyr::group_by(id,timepoint) %>%
+  dplyr::summarise(sum(SA))
 
 
-# saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
-  # dplyr::rename(fragSA = surfaceArea.x) %>% 
-  # dplyr::rename(wildSA = surfaceArea.y)
-
-saCombo <- bind_rows(saFrag,saWild)
-
-
-saFinal <- saCombo %>% 
-  dplyr::filter(timePoint %in% c("0","4")) %>%
-  select(c('timePoint','geno','ID','surfaceArea'))
-
-
-length(saFinal$timePoint)
-
-saChange <- dcast(saFinal, geno+ID~timePoint) 
-
-saChange <- dplyr::rename(saChange, "initialSurfaceArea" = "0", "finalSurfaceArea" = "4")
-saChange
-saChange$percentChange <- ((saChange$finalSurfaceArea-saChange$initialSurfaceArea)/saChange$initialSurfaceArea)*100
-
-
-saFragTest <- saChange %>% 
-  select(geno, ID, percentChange) %>% 
-  dplyr::filter(ID %in% 'frag') %>%
-  dplyr::group_by(geno,ID)
-  #dplyr::summarise(sum(surfaceArea)) %>% 
-  #dplyr::rename("surfaceArea" = "sum(surfaceArea)")
-
-
-saWildTest <- saChange %>% 
-  dplyr::filter(ID %in% 'wild') %>% 
-  select(geno, ID, percentChange)
-
-
-saCombo <- left_join(saFragTest, saWildTest, by = c("geno"), copy = FALSE) %>% 
-  dplyr::rename(fragpercentChange = percentChange.x) %>% 
-  dplyr::rename(wildpercentChange = percentChange.y)
+saWild <- saClean %>%
+  dplyr::filter(treatment %in% 'wild') %>%
+  select(timepoint, species, id, treatment, SA)
 
 
 
+# saWild <- saClean %>% 
+#   dplyr::filter(ID %in% 'wild') %>% 
+#   select(timePoint, geno, ID, surfaceArea)
 
 
+ 
+saCombo <- left_join(saFrag, saWild, by = c("timepoint","id"), copy = FALSE) %>%
+  dplyr::rename(fragSA = `sum(SA)`) %>%
+  dplyr::rename(wildSA = SA) %>% 
+  select(id, timepoint, fragSA, wildSA)
 
+saDiff <- saCombo %>% 
+  group_by(id) %>% 
+  summarise()
+
+ 
+# # saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
+#   # dplyr::rename(fragSA = surfaceArea.x) %>% 
+#   # dplyr::rename(wildSA = surfaceArea.y)
+# 
+# saCombo <- bind_rows(saFrag,saWild)
+# 
+# 
+# saFinal <- saCombo %>% 
+#   dplyr::filter(timePoint %in% c("0","4")) %>%
+#   select(c('timePoint','geno','ID','surfaceArea'))
+# 
+# 
+# length(saFinal$timePoint)
+# 
+# saChange <- dcast(saFinal, geno+ID~timePoint) 
+# 
+# saChange <- dplyr::rename(saChange, "initialSurfaceArea" = "0", "finalSurfaceArea" = "4")
+# saChange
+# saChange$percentChange <- ((saChange$finalSurfaceArea-saChange$initialSurfaceArea)/saChange$initialSurfaceArea)*100
+# 
+# 
+# saFragTest <- saChange %>% 
+#   select(geno, ID, percentChange) %>% 
+#   dplyr::filter(ID %in% 'frag') %>%
+#   dplyr::group_by(geno,ID)
+#   #dplyr::summarise(sum(surfaceArea)) %>% 
+#   #dplyr::rename("surfaceArea" = "sum(surfaceArea)")
+# 
+# 
+# saWildTest <- saChange %>% 
+#   dplyr::filter(ID %in% 'wild') %>% 
+#   select(geno, ID, percentChange)
+# 
+# 
+# saCombo <- left_join(saFragTest, saWildTest, by = c("geno"), copy = FALSE) %>% 
+#   dplyr::rename(fragpercentChange = percentChange.x) %>% 
+#   dplyr::rename(wildpercentChange = percentChange.y)
+# 
+# 
+# 
+# 
+# 
+# 
 
 
 
