@@ -136,6 +136,20 @@ saCombo <- left_join(saFrag, saWild, by = c("timepoint","id"), copy = FALSE) %>%
 
 saCombo <- bind_rows(saFrag,saWild)
 
+saFinal <- saCombo %>%
+  dplyr::filter(timepoint %in% c("0","4")) %>%
+  select(c('timepoint','id','treatment','surfaceArea'))
+
+
+
+saChange <- dcast(saFinal, geno+ID~timePoint) 
+
+
+
+
+
+
+
 
 
 saDiff <- saCombo %>% 
