@@ -230,7 +230,7 @@ We are visualizing the data as bar graphs using the package `ggplot2`
 
 
 
-percentChangePlot <- ggplot(saChange, aes(x = geno, y = percentChange, fill = ID ))+
+percentChangePlot <- ggplot(saChange, aes(x = geno, y = percentChange, fill = ID))+
   geom_bar(stat = 'identity', position = 'dodge')+
   ylim(-50, 100)
 
@@ -260,9 +260,6 @@ saWildAov <- saClean %>%
   dplyr::group_by(timePoint,species,geno,ID,trial)
 
 
-# saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
-  # dplyr::rename(fragSA = surfaceArea.x) %>% 
-  # dplyr::rename(wildSA = surfaceArea.y)
 
 saComboAov <- bind_rows(saFragAov,saWildAov)
 

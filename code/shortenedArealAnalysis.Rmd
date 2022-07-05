@@ -118,8 +118,9 @@ head(saClean)
 saFrag <- saClean %>%
   select(timepoint, species, id, treatment, SA) %>%
   dplyr::filter(treatment %in% 'frag') %>%
-  dplyr::group_by(id,timepoint) %>%
-  dplyr::summarise(sum(SA))
+  dplyr::group_by(timepoint, species, id, treatment) %>%
+  dplyr::summarise(sum(SA)) %>% 
+  dplyr::rename("SA" = "sum(SA)")
 
 
 saWild <- saClean %>%
@@ -127,36 +128,21 @@ saWild <- saClean %>%
   select(timepoint, species, id, treatment, SA)
 
 
-
- 
-saCombo <- left_join(saFrag, saWild, by = c("timepoint","id"), copy = FALSE) %>%
-  dplyr::rename(fragSA = `sum(SA)`) %>%
-  dplyr::rename(wildSA = SA) %>% 
-  select(id, timepoint, fragSA, wildSA)
-
 saCombo <- bind_rows(saFrag,saWild)
 
 saFinal <- saCombo %>%
-  dplyr::filter(timepoint %in% c("0","4")) %>%
-  select(c('timepoint','id','treatment','surfaceArea'))
+  dplyr::filter(timepoint %in% c("T0","T6")) %>%
+  select(c('timepoint','species','id','treatment', "SA"))
 
 
 
-saChange <- dcast(saFinal, geno+ID~timePoint) 
+saChange <- dcast(saFinal, id+treatment~timepoint) 
 
 
-
-
-
-
-
-
-
-saDiff <- saCombo %>% 
-  group_by(id) %>% 
-  summarise()
-
- 
+saChange <- dplyr::rename(saChange, "initialSurfaceArea" = "T0", "finalSurfaceArea" = "T6")
+saChange
+saChange$difference <- (saChange$finalSurfaceArea-saChange$initialSurfaceArea)
+saChange$percentChange <- ((saChange$finalSurfaceArea-saChange$initialSurfaceArea)/saChange$initialSurfaceArea)*100
 
 
 ```
