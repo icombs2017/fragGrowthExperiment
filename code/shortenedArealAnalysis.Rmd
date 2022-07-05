@@ -134,6 +134,10 @@ saCombo <- left_join(saFrag, saWild, by = c("timepoint","id"), copy = FALSE) %>%
   dplyr::rename(wildSA = SA) %>% 
   select(id, timepoint, fragSA, wildSA)
 
+saCombo <- bind_rows(saFrag,saWild)
+
+
+
 saDiff <- saCombo %>% 
   group_by(id) %>% 
   summarise()
