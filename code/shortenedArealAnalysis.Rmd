@@ -48,7 +48,7 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork", "FSA", "rstatix", "tidyverse")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork", "FSA", "rstatix", "tidyverse", "lme4", 'PMCRMplus', "EnvStats", "emmeans", "MuMIn", "sjstats")
 
 #IF YOU WANT TO RUN PAIRWISE PERMANOVA REMEMBER TO INSTALL PAIRWISE ADONIS
 
@@ -160,7 +160,7 @@ dlSApercentChange <- dlSApercentChange.1 + theme(
   axis.text.y=element_text(size = 18, color="black"),
   legend.position = "right")
 
-dlSApercentChange1
+dlSApercentChange.1
 
 ggsave("../figures/dlPercentSAgrowth.png", plot = dlSApercentChange, height = 5, width = 9, units = 'in',dpi = 600)
 
@@ -535,19 +535,6 @@ dlsaTest <- left_join(dlsaFragTest, dlsaWildTest, by = c("id"), copy = FALSE) %>
 
 
 ```{r}
-shapiro.test(dlsaChange$percentChange) 
-  
-x=dlsaTest$fragpercentChange
-y=dlsaTest$wildpercentChange
-
-# LeveneTest(dlsaCombo$surfaceArea, group = dlsaCombo$treatment)
-
-t.test(x, y, paired = TRUE, alternative = "two.sided")
-
-
-
-```
-```{r}
 pcsaFragTest <- pcsaChange %>%
   select(id, treatment, percentChange) %>%
   dplyr::filter(treatment %in% 'frag') %>%
@@ -563,17 +550,7 @@ pcsaTest <- left_join(pcsaFragTest, pcsaWildTest, by = c("id"), copy = FALSE) %>
 ```
 
 
-```{r}
-shapiro.test(pcsaChange$percentChange) 
-  
-x=pcsaTest$pcfragpercentChange
-y=pcsaTest$pcwildpercentChange
 
-# LeveneTest(pcsaCombo$surfaceArea, group = pcsaCombo$treatment)
-
-t.test(x, y, paired = TRUE, alternative = "two.sided")
-
-```
 ```{r}
 pssaFragTest <- pssaChange %>%
   select(id, treatment, percentChange) %>%
@@ -590,17 +567,7 @@ pssaTest <- left_join(pssaFragTest, pssaWildTest, by = c("id"), copy = FALSE) %>
 ```
 
 
-```{r}
-shapiro.test(pssaChange$percentChange) 
-  
-x=pssaTest$psfragpercentChange
-y=pssaTest$pswildpercentChange
 
-# LeveneTest(pcsaCombo$surfaceArea, group = pcsaCombo$treatment)
-
-t.test(x, y, paired = TRUE, alternative = "two.sided")
-
-```
 # Here I am finding the mean percent change values
 ```{r}
 dlWildMeanPercentChange <- mean(dlsaWildTest$percentChange)
@@ -629,59 +596,140 @@ psFragMeanPercentChange
 ```
 
 
-we are going to combine all of the data we've parsed out above
 
-```{r, stats, include = TRUE}
+# Combining Data
+***
+## We are going to combine all of the data we've parsed out above into two larger data frames. One for the raw surface area numbers `totalSA` and the other for the percent change data `totalChange`. The latter of which requires a bit more intensive data manipulation because we are calculating percent change of two different timepoints, and combining those data. All of this is done using `dplyr` and `reshape2`.
 
-totalChangeSA <-  bind_rows(dlsaChange, pcsaChange, pssaChange)
+```{r, combiningData, include = TRUE}
+# Combining the smaller data sets above into two larger data sets 
 totalSA <- bind_rows(dlsaFinal, pcsaFinal, pssaFinal)
+totalClean <- bind_rows(dlsaClean, pcsaClean, pssaClean)
 
-totalPerm <- adonis(formula = SA ~ treatment*timepoint*species, data = totalSA, method = "euclidian", permutations = 9999 )
+# Now we need to take totalClean and calculate percent change from our two time points.
+# But first we need to separate them out into frags and wilds
+
+# Separating into Frags because we need to add up the trials
+totalFrag <- totalClean %>%
+  select(timepoint, species, id, treatment, SA) %>%
+  dplyr::filter(treatment %in% 'frag') %>%
+  dplyr::group_by(timepoint, species, id, treatment) %>%
+  dplyr::summarise(sum(SA)) %>% 
+  dplyr::rename("SA" = "sum(SA)")
+
+# Separating into wilds 
+totalWild <- totalClean %>%
+  dplyr::filter(treatment %in% 'wild') %>%
+  select(timepoint, species, id, treatment, SA)
+
+# Combining the two back together
+totalCombo <- bind_rows(totalFrag,totalWild)
+
+# Now we are separating out each bracket of time points so we can calculate Percent change from T0 to T3 and T0 to T6.
+
+totalT3 <- totalCombo %>%
+  dplyr::filter(timepoint %in% c("T0","T3")) %>%
+  select(c('timepoint','species','id','treatment', "SA"))
+
+totalT6 <- totalCombo %>%
+  dplyr::filter(timepoint %in% c("T0","T6")) %>%
+  select(c('timepoint','species','id','treatment', "SA"))
+
+# Going from long to wide so we can do the calculation
+totalChangeT3 <- dcast(totalT3, id+treatment~timepoint) 
+
+# Calculating Percent Change
+totalChangeT3 <- dplyr::rename(totalChangeT3, "initialSurfaceArea" = "T0", "T3SurfaceArea" = "T3")
+totalChangeT3
+totalChangeT3$difference <- (totalChangeT3$T3SurfaceArea-totalChangeT3$initialSurfaceArea)
+totalChangeT3$T3percentChange <- ((totalChangeT3$T3SurfaceArea-totalChangeT3$initialSurfaceArea)/totalChangeT3$initialSurfaceArea)*100
+
+# Going from long to wide so we can do the calculation
+totalChangeT6 <- dcast(totalT6, id+treatment~timepoint) 
+
+# Calculating Percent Change
+totalChangeT6 <- dplyr::rename(totalChangeT6, "initialSurfaceArea" = "T0", "finalSurfaceArea" = "T6")
+totalChangeT6
+totalChangeT6$difference <- (totalChangeT6$finalSurfaceArea-totalChangeT6$initialSurfaceArea)
+totalChangeT6$T6percentChange <- ((totalChangeT6$finalSurfaceArea-totalChangeT6$initialSurfaceArea)/totalChangeT6$initialSurfaceArea)*100
+
+# combining the two datasets again 
+totalChange <- bind_rows(totalChangeT3, totalChangeT6)
+
+# Selecting so we can melt the data back from wide to long again
+totalChange <- totalChange %>% 
+  dplyr::select(id,treatment,T3percentChange,T6percentChange)
+totalChangeMelt1 <- melt(totalChange, id = c(1,2))
+
+# Cleaning up the data after melting it
+totalChangeMelt <- totalChangeMelt1 %>% 
+  na.omit() %>% 
+  tidyr::separate(variable, into = c("timepoint", "remove" ), sep = 2) %>% 
+  dplyr::rename("percentChange" = "value") %>% 
+  dplyr::select(id,treatment,timepoint,percentChange)
+
+# Renaming the dataframe 
+totalChange <- totalChangeMelt
 
 
+```
+
+
+# Normality testing and Data Transformation
+***
+## Here we are testing for normality of the raw SA data, and if not normally distributed, we are transforming the data to see if that will fit a normal distribution.
+
+```{r, normalityTesting, include = TRUE}
+# totalPerm <- adonis(formula = SA ~ treatment*timepoint*species, data = totalSA, method = "euclidian", permutations = 9999 )
+
+#Testing normality of totalSA and totalChangeSA
+
+hist(totalSA$SA)
+
+shapiro.test(totalSA$SA)
+
+#Significant so Data does not fit normal distribution
 #log transform data
 
 totalSA$logSA <- log(totalSA$SA)
 
-SAtTest <- t.test(logSA  ~ treatment, data = totalSA)
+#Re-testing normality
+hist(totalSA$logSA)
 
-SAaov <- aov(SA ~ )
+shapiro.test(totalSA$logSA)
+
+
 
 ```
+# Statistical Analyses
+***
+## With our newly formed dataset and our transformed data, we are now going to perform some Repeated Measures Analyses of variance using the `lmer()` function from the package `lme4`. We are testing our logtransformed raw SA data as well as our percent change data with **treatment** and **timepoint** as factors and **id** as a random effect.
+
 
 ```{r, repeated measures, include = TRUE}
 
 
-totalSA %>%
-  group_by(timepoint) %>%
-  identify_outliers(SA)
-
-
-totalSA %>%
-  group_by(treatment, timepoint) %>%
-  shapiro_test(logSA)
-
-ggqqplot(totalSA, "logSA", ggtheme = theme_bw()) +
-  facet_grid(timepoint ~ treatment, labeller = "label_both")
+logTotalLM <- lmer(logSA ~ treatment*timepoint + (1 | id), totalSA)
+logTotalLManova <- anova(logChangeLM)
+logTotalLManova
 
 
 
-one.way <- totalSA %>%
-group_by(timepoint) %>%
-anova_test(dv = logSA, wid = id, within = treatment) %>%
-get_anova_table() %>%
-adjust_pvalue(method = "bonferroni")
-one.way
-
-pwc2 <- totalSA %>%
-group_by(treatment) %>%
-pairwise_t_test(
-logSA ~ timepoint, paired = TRUE,
-p.adjust.method = "bonferroni"
-)
-data.frame(pwc2)
+eta_sq(logTotalLM, partial = TRUE)
+r.squaredGLMM(logTotalLM)
+emmeans(logTotalLM, list(pairwise ~ timepoint), adjust = 'bonferroni')
 
 
+
+# 
+# percentChangeAOV <- aov(percentChange ~ treatment, totalChangeSA )
+# summary(percentChangeAOV)
+
+
+
+logChangeLM <- lmer(percentChange ~ treatment*timepoint + (1 | id), totalChange)
+logChangeLManova <- anova(logChangeLM)
+logChangeLManova
 
 
 
