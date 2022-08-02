@@ -149,6 +149,7 @@ dlSApercentChange.1 <- ggplot(data=dlsaChange, aes(x=id, y=percentChange, fill=t
     ggtitle("D. lab") +     # Set title
     theme_bw()
 
+
 dlSApercentChange <- dlSApercentChange.1 + theme(
   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
   panel.background = element_rect(fill = '#F5F5F5'),
@@ -568,33 +569,6 @@ pssaTest <- left_join(pssaFragTest, pssaWildTest, by = c("id"), copy = FALSE) %>
 
 
 
-# Here I am finding the mean percent change values
-```{r}
-dlWildMeanPercentChange <- mean(dlsaWildTest$percentChange)
-
-dlWildMeanPercentChange
-
-dlFragMeanPercentChange <- mean(dlsaFragTest$percentChange)
-
-dlFragMeanPercentChange
-
-pcWildMeanPercentChange <- mean(pcsaWildTest$percentChange)
-
-pcWildMeanPercentChange
-
-pcFragMeanPercentChange <- mean(pcsaFragTest$percentChange)
-
-pcFragMeanPercentChange
-
-psWildMeanPercentChange <- mean(pssaWildTest$percentChange)
-
-psWildMeanPercentChange
-
-psFragMeanPercentChange <- mean(pssaFragTest$percentChange)
-
-psFragMeanPercentChange
-```
-
 
 
 # Combining Data
@@ -636,7 +610,7 @@ totalT6 <- totalCombo %>%
   select(c('timepoint','species','id','treatment', "SA"))
 
 # Going from long to wide so we can do the calculation
-totalChangeT3 <- dcast(totalT3, id+treatment~timepoint) 
+totalChangeT3 <- dcast(totalT3,id+treatment~timepoint) 
 
 # Calculating Percent Change
 totalChangeT3 <- dplyr::rename(totalChangeT3, "initialSurfaceArea" = "T0", "T3SurfaceArea" = "T3")
@@ -736,10 +710,117 @@ logChangeLManova
 ```
 
 
+```{r, visualization, include = TRUE}
+
+
+SApercentChange.1 <- ggplot(totalChange, aes(x = treatment, y = percentChange, fill = timepoint)) +
+  geom_bar(stat = "identity", position = position_dodge())+
+  facet_wrap(~id)+
+    ggtitle("Surface Area Percent Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c( "#EAA65D","#0D3B66"))+    
+    xlab("Treatment") + ylab("Percent Change (%)")
+SApercentChange.1
+
+SApercentChange<- SApercentChange.1 + theme(
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+  panel.background = element_rect(fill = '#F5F5F5'),
+  plot.title = element_text(hjust = 0.5), 
+  axis.line = element_line(colour = "black"), 
+  axis.ticks = element_line(color="black"), 
+  text = element_text(size = 22, color="black"), 
+  axis.text.x=element_text(size = 18, color="black"), 
+  axis.text.y=element_text(size = 18, color="black"),
+  legend.position = "right")
+
+SApercentChange
+
+ggsave("../figures/SApercentChange.png", plot = SApercentChange, height = 15, width = 20, units = 'in',dpi = 600)
+
+```
+
+```{r, visualization, include = TRUE}
 
 
 
+SAgrowth.1 <- ggplot(data=totalSA, aes(x = treatment, y = SA, fill = timepoint)) +
+  geom_bar(stat = "identity", position = position_dodge())+
+  facet_wrap(~id)+
+  scale_fill_hue(name="Time Point") +  
+  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + # Set axis labels
+    ggtitle("Surface Area Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(values = c("#82CDED", "#2B4F2E", "#EAA65D"))
+
+SAgrowth.1
+
+SAgrowth <- SAgrowth.1 + theme(
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+  panel.background = element_rect(fill = '#F5F5F5'),
+  plot.title = element_text(hjust = 0.5), 
+  axis.line = element_line(colour = "black"), 
+  axis.ticks = element_line(color="black"), 
+  text = element_text(size = 22, color="black"), 
+  axis.text.x=element_text(size = 18, color="black"), 
+  axis.text.y=element_text(size = 18, color="black"),
+  legend.position = "right")
+
+
+SAgrowth
+
+ggsave("../figures/SAgrowth.png", plot = SAgrowth, height = 15, width = 20, units = 'in',dpi = 600)
+
+```
 
 
 
+```{r}
+# meanDataset<- mean(totalChange[totalChange$id == "^DL"& totalChange$treatment=='frag'& totalChange$timepoint=='T3','percentChange'])
+# 
+# # plot(subset(meanDataset,select=c(id,percentChange)))
+# 
+# meanDataset
 
+
+```
+
+
+###DON'T BE MAD I DID THIS AGAIN, I COULDN'T FIGURE IT OUT
+
+```{r, loadingData, include = TRUE}
+
+
+drive_download(
+  as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
+  path = "../data/saDataset.xlsx", 
+  overwrite = TRUE)
+
+meanDataSet <- read_excel("../data/saDataset.xlsx", sheet = 7)
+
+meanDataSet
+
+
+```
+
+```{r, visualization, include = TRUE}
+
+
+meanPercentChange.1 <- ggplot(meanDataSet, aes(x = timepoint, y = meanPercentChange, fill = treatment)) +
+  geom_bar(stat = "identity", position = position_dodge())+
+  facet_wrap(~species)+
+    ggtitle("Mean Surface Area Percent Growth of D. labyrinthiformis, P. clivosa, and P. strigosa Over Six Months") +scale_fill_manual(name="Time Point",labels=c("frag" = "Frag", "wild" = "Whole"),values = c( "#EAA65D","#0D3B66"))+    
+    xlab("Time Point") + ylab("Percent Change (%)")
+meanPercentChange.1
+
+meanPercentChange<- meanPercentChange.1 + theme(
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+  panel.background = element_rect(fill = '#F5F5F5'),
+  plot.title = element_text(hjust = 0.5), 
+  axis.line = element_line(colour = "black"), 
+  axis.ticks = element_line(color="black"), 
+  text = element_text(size = 35, color="black"), 
+  axis.text.x=element_text(size = 31, color="black"), 
+  axis.text.y=element_text(size = 31, color="black"),
+  legend.position = "right")
+
+meanPercentChange
+
+ggsave("../figures/meanPercentChange.png", plot = meanPercentChange, height = 15, width = 30, units = 'in',dpi = 600)
+
+```
