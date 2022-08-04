@@ -48,7 +48,7 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork", "FSA", "rstatix", "tidyverse", "lme4", 'PMCRMplus', "EnvStats", "emmeans", "MuMIn", "sjstats")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork", "FSA", "rstatix", "tidyverse", "lme4", 'PMCRMplus', "EnvStats", "emmeans", "MuMIn", "sjstats", "lmerTest")
 
 #IF YOU WANT TO RUN PAIRWISE PERMANOVA REMEMBER TO INSTALL PAIRWISE ADONIS
 
@@ -684,7 +684,7 @@ shapiro.test(totalSA$logSA)
 
 
 logTotalLM <- lmer(logSA ~ species*treatment*timepoint + (1 | id), totalSA)
-logTotalLManova <- anova(logTotalLM)
+logTotalLManova <- ranova(logTotalLM)
 logTotalLManova
 
 
@@ -739,13 +739,15 @@ SApercentChange.1 <- ggplot(totalChangeSe, aes(x = treatment, y = meanPC, fill =
   facet_wrap(~species)+
     ggtitle("Surface Area Percent Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c( "#EAA65D","#0D3B66"))+    
     xlab("Treatment") + ylab("Percent Change (%)")+
-  geom_errorbar( aes(x=treatment, ymin=meanPC-se, ymax=meanPC+se), position = position_dodge()) 
+  geom_errorbar( aes(x=treatment, ymin=meanPC-se, ymax=meanPC+se), position = position_dodge()) +
+    ggtitle("Mean Percent Change in Surface Area of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c("#0D3B66","#EAA65D"))+    
+    xlab("Treatment") + ylab("Percent Change (%)")
 SApercentChange.1
 
 SApercentChange<- SApercentChange.1 + theme(
   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
   panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
+  plot.title = element_blank(), 
   axis.line = element_line(colour = "black"), 
   axis.ticks = element_line(color="black"), 
   text = element_text(size = 22, color="black"), 
@@ -769,7 +771,7 @@ SAgrowth.1 <- ggplot(data=totalSAse, aes(x = treatment, y = meanSA, fill = timep
   facet_wrap(~species)+
   scale_fill_hue(name="Time Point") +  
   labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + # Set axis labels
-    ggtitle("Surface Area Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(values = c("#82CDED", "#2B4F2E", "#EAA65D"))
+    ggtitle("Mean Surface Area Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(values = c("#82CDED", "#2B4F2E", "#EAA65D"))
 
 SAgrowth.1
 
@@ -795,26 +797,26 @@ ggsave("../figures/SAgrowth.png", plot = SAgrowth, height = 15, width = 20, unit
 ```{r, visualization, include = TRUE}
 
 
-meanPercentChange.1 <- ggplot(meanDataSet, aes(x = timepoint, y = meanPercentChange, fill = treatment)) +
-  geom_bar(stat = "identity", position = position_dodge())+
-  facet_wrap(~species)+
-    ggtitle("Mean Surface Area Percent Growth of D. labyrinthiformis, P. clivosa, and P. strigosa Over Six Months") +scale_fill_manual(name="Time Point",labels=c("frag" = "Frag", "wild" = "Whole"),values = c( "#EAA65D","#0D3B66"))+    
-    xlab("Time Point") + ylab("Percent Change (%)")
-meanPercentChange.1
-
-meanPercentChange<- meanPercentChange.1 + theme(
-  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
-  panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
-  axis.line = element_line(colour = "black"), 
-  axis.ticks = element_line(color="black"), 
-  text = element_text(size = 35, color="black"), 
-  axis.text.x=element_text(size = 31, color="black"), 
-  axis.text.y=element_text(size = 31, color="black"),
-  legend.position = "right")
-
-meanPercentChange
-
-ggsave("../figures/meanPercentChange.png", plot = meanPercentChange, height = 15, width = 30, units = 'in',dpi = 600)
+# meanPercentChange.1 <- ggplot(meanDataSet, aes(x = timepoint, y = meanPercentChange, fill = treatment)) +
+#   geom_bar(stat = "identity", position = position_dodge())+
+#   facet_wrap(~species)+
+#     ggtitle("Mean Surface Area Percent Growth of D. labyrinthiformis, P. clivosa, and P. strigosa Over Six Months") +scale_fill_manual(name="Time Point",labels=c("frag" = "Frag", "wild" = "Whole"),values = c( "#EAA65D","#0D3B66"))+    
+#     xlab("Time Point") + ylab("Percent Change (%)")
+# meanPercentChange.1
+# 
+# meanPercentChange<- meanPercentChange.1 + theme(
+#   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+#   panel.background = element_rect(fill = '#F5F5F5'),
+#   plot.title = element_text(hjust = 0.5), 
+#   axis.line = element_line(colour = "black"), 
+#   axis.ticks = element_line(color="black"), 
+#   text = element_text(size = 35, color="black"), 
+#   axis.text.x=element_text(size = 31, color="black"), 
+#   axis.text.y=element_text(size = 31, color="black"),
+#   legend.position = "right")
+# 
+# meanPercentChange
+# 
+# ggsave("../figures/meanPercentChange.png", plot = meanPercentChange, height = 15, width = 30, units = 'in',dpi = 600)
 
 ```
