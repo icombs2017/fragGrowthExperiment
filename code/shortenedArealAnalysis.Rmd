@@ -636,7 +636,7 @@ totalT6 <- totalCombo %>%
   select(c('timepoint','species','id','treatment', "SA"))
 
 # Going from long to wide so we can do the calculation
-totalChangeT3 <- dcast(totalT3, id+treatment~timepoint) 
+totalChangeT3 <- dcast(totalT3, id+species+treatment~timepoint) 
 
 # Calculating Percent Change
 totalChangeT3 <- dplyr::rename(totalChangeT3, "initialSurfaceArea" = "T0", "T3SurfaceArea" = "T3")
@@ -645,7 +645,7 @@ totalChangeT3$difference <- (totalChangeT3$T3SurfaceArea-totalChangeT3$initialSu
 totalChangeT3$T3percentChange <- ((totalChangeT3$T3SurfaceArea-totalChangeT3$initialSurfaceArea)/totalChangeT3$initialSurfaceArea)*100
 
 # Going from long to wide so we can do the calculation
-totalChangeT6 <- dcast(totalT6, id+treatment~timepoint) 
+totalChangeT6 <- dcast(totalT6, id+species+treatment~timepoint) 
 
 # Calculating Percent Change
 totalChangeT6 <- dplyr::rename(totalChangeT6, "initialSurfaceArea" = "T0", "finalSurfaceArea" = "T6")
@@ -658,15 +658,15 @@ totalChange <- bind_rows(totalChangeT3, totalChangeT6)
 
 # Selecting so we can melt the data back from wide to long again
 totalChange <- totalChange %>% 
-  dplyr::select(id,treatment,T3percentChange,T6percentChange)
-totalChangeMelt1 <- melt(totalChange, id = c(1,2))
+  dplyr::select(id,species, treatment,T3percentChange,T6percentChange)
+totalChangeMelt1 <- melt(totalChange, id = c(1,2,3))
 
 # Cleaning up the data after melting it
 totalChangeMelt <- totalChangeMelt1 %>% 
   na.omit() %>% 
   tidyr::separate(variable, into = c("timepoint", "remove" ), sep = 2) %>% 
   dplyr::rename("percentChange" = "value") %>% 
-  dplyr::select(id,treatment,timepoint,percentChange)
+  dplyr::select(id,species, treatment,timepoint,percentChange)
 
 # Renaming the dataframe 
 totalChange <- totalChangeMelt
@@ -709,7 +709,7 @@ shapiro.test(totalSA$logSA)
 ```{r, repeated measures, include = TRUE}
 
 
-logTotalLM <- lmer(logSA ~ treatment*timepoint + (1 | id), totalSA)
+logTotalLM <- lmer(logSA ~ species*treatment*timepoint + (1 | id), totalSA)
 logTotalLManova <- anova(logTotalLM)
 logTotalLManova
 
@@ -717,7 +717,7 @@ logTotalLManova
 
 eta_sq(logTotalLM, partial = TRUE)
 r.squaredGLMM(logTotalLM)
-emmeans(logTotalLM, list(pairwise ~ timepoint), adjust = 'bonferroni')
+emmeans(logTotalLM, list(pairwise ~ species*timepoint), adjust = 'bonferroni')
 
 
 
@@ -727,7 +727,7 @@ emmeans(logTotalLM, list(pairwise ~ timepoint), adjust = 'bonferroni')
 
 
 
-logChangeLM <- lmer(percentChange ~ treatment*timepoint + (1 | id), totalChange)
+logChangeLM <- lmer(percentChange ~ species*treatment*timepoint + (1 | id), totalChange)
 logChangeLManova <- anova(logChangeLM)
 logChangeLManova
 
