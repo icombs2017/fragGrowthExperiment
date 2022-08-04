@@ -684,7 +684,7 @@ shapiro.test(totalSA$logSA)
 
 
 logTotalLM <- lmer(logSA ~ species*treatment*timepoint + (1 | id), totalSA)
-logTotalLManova <- anova(logChangeLM)
+logTotalLManova <- anova(logTotalLM)
 logTotalLManova
 
 
@@ -701,9 +701,9 @@ emmeans(logTotalLM, list(pairwise ~ timepoint), adjust = 'bonferroni')
 
 
 
-logChangeLM <- lmer(percentChange ~ species*treatment*timepoint + (1 | id), totalChange)
-logChangeLManova <- anova(logChangeLM)
-logChangeLManova
+changeLM <- lmer(percentChange ~ species*treatment*timepoint + (1 | id), totalChange)
+changeLManova <- anova(changeLM)
+changeLManova
 
 
 
@@ -711,13 +711,35 @@ logChangeLManova
 
 
 ```{r, visualization, include = TRUE}
+se <- function(x) sqrt(var(x) / length(x))
 
+totalSAse <- totalSA %>%
+  dplyr::select(timepoint, species, treatment, SA, logSA) %>% 
+  dplyr::group_by(timepoint, species, treatment) %>% 
+  dplyr::summarise(
+    meanSA = mean(SA),
+    sd = sd(SA),
+    n = n(),
+    se = sd/sqrt(n))
 
-SApercentChange.1 <- ggplot(totalChange, aes(x = treatment, y = percentChange, fill = timepoint)) +
+totalChangeSe <- totalChange %>% 
+dplyr::select(timepoint, species, treatment,percentChange) %>% 
+  dplyr::group_by(timepoint, species, treatment) %>% 
+  dplyr::summarise(
+    meanPC = mean(percentChange),
+    sd = sd(percentChange),
+    n = n(),
+    se = sd/sqrt(n))
+
+# totalSA$se <- se(totalSA$SA)
+# totalChange$se <-se(totalChange$percentChange)
+
+SApercentChange.1 <- ggplot(totalChangeSe, aes(x = treatment, y = meanPC, fill = timepoint)) +
   geom_bar(stat = "identity", position = position_dodge())+
   facet_wrap(~species)+
     ggtitle("Surface Area Percent Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c( "#EAA65D","#0D3B66"))+    
-    xlab("Treatment") + ylab("Percent Change (%)")
+    xlab("Treatment") + ylab("Percent Change (%)")+
+  geom_errorbar( aes(x=treatment, ymin=meanPC-se, ymax=meanPC+se), position = position_dodge()) 
 SApercentChange.1
 
 SApercentChange<- SApercentChange.1 + theme(
@@ -741,8 +763,9 @@ ggsave("../figures/SApercentChange.png", plot = SApercentChange, height = 15, wi
 
 
 
-SAgrowth.1 <- ggplot(data=totalSA, aes(x = treatment, y = SA, fill = timepoint)) +
+SAgrowth.1 <- ggplot(data=totalSAse, aes(x = treatment, y = meanSA, fill = timepoint)) +
   geom_bar(stat = "identity", position = position_dodge())+
+  geom_errorbar( aes(x=treatment, ymin=meanSA-se, ymax=meanSA+se), position = position_dodge())+ 
   facet_wrap(~species)+
   scale_fill_hue(name="Time Point") +  
   labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + # Set axis labels
