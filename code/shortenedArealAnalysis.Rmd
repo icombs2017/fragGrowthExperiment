@@ -136,6 +136,7 @@ dlsaChange$percentChange <- ((dlsaChange$finalSurfaceArea-dlsaChange$initialSurf
  
 
 ```
+#Here we are creating a percent change figure for just D. lab
 
 ```{r, visualization, include = TRUE}
 
@@ -145,8 +146,8 @@ dlSApercentChange.1 <- ggplot(data=dlsaChange, aes(x=id, y=percentChange, fill=t
     geom_bar(colour="black", stat="identity",
              position=position_dodge(),
              size=.3) +  scale_fill_manual(name="Treatment",labels=c('Frag', 'Wild'),values = c("#82CDED", "#2B4F2E")) +     
-    xlab("ID") + ylab("Percent Change (%)") + # Set axis labels
-    ggtitle("D. lab") +     # Set title
+    xlab("ID") + ylab("Percent Change (%)") + 
+    ggtitle("D. lab") +    
     theme_bw()
 
 
@@ -167,6 +168,7 @@ ggsave("../figures/dlPercentSAgrowth.png", plot = dlSApercentChange, height = 5,
 
 
 ```
+#Here we are creating a surface area change figure for just D. lab
 
 ```{r, visualization, include = TRUE}
 
@@ -200,6 +202,7 @@ ggsave("../figures/dlSAgrowth.png", plot = dlSAgrowthGenotype, height = 5, width
 
 
 ```
+#Here we are importing data for P. cli from google drive
 
 ```{r, loadingData, include = TRUE}
 
@@ -215,6 +218,7 @@ pcsa
 
 
 ```
+## Now I am just tidying up my dataset, I am combining two columns, **species** and **genotype** into a column **geno** using the `paste0` function, cleaning up the raw dataset to only include my species of concern using multiple functions from the package `dplyr`, and changing the class of some variables to factors using the function `as.factor()` for easier manipulation down the road.
 
 ```{r, dataManipulation, include = TRUE}
 
@@ -242,6 +246,7 @@ head(pcsaClean)
 
 
 ```
+### Here we are breaking the data apart into frags and wilds, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2`
 
 ```{r, calculatingPercentChange, include = TRUE }
 
@@ -278,6 +283,7 @@ pcsaChange$percentChange <- ((pcsaChange$finalSurfaceArea-pcsaChange$initialSurf
  
 
 ```
+#Here we are creating a surface area percent change figure for just P. cli
 
 ```{r, visualization, include = TRUE}
 
@@ -308,6 +314,7 @@ ggsave("../figures/pcPercentSAgrowth.png", plot = pcSApercentChange, height = 5,
 
 
 ```
+#Here we are creating a surface area change figure for just P. cli
 
 ```{r, visualization, include = TRUE}
 
@@ -341,6 +348,7 @@ ggsave("../figures/pcSAgrowth.png", plot = pcSAgrowthGenotype, height = 5, width
 
 
 ```
+#Here we are importing data for P. str
 
 ```{r, loadingData, include = TRUE}
 
@@ -356,6 +364,7 @@ pssa
 
 
 ```
+## Now I am just tidying up my dataset, I am combining two columns, **species** and **genotype** into a column **geno** using the `paste0` function, cleaning up the raw dataset to only include my species of concern using multiple functions from the package `dplyr`, and changing the class of some variables to factors using the function `as.factor()` for easier manipulation down the road.
 
 ```{r, dataManipulation, include = TRUE}
 
@@ -383,6 +392,7 @@ head(pssaClean)
 
 
 ```
+### Here we are breaking the data apart into frags and wilds, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2`
 
 ```{r, calculatingPercentChange, include = TRUE }
 
@@ -419,6 +429,7 @@ pssaChange$percentChange <- ((pssaChange$finalSurfaceArea-pssaChange$initialSurf
  
 
 ```
+#Here we are creating a surface area percent change graph for just P. str
 
 ```{r, visualization, include = TRUE}
 
@@ -449,6 +460,7 @@ ggsave("../figures/psPercentSAgrowth.png", plot = psSApercentChange, height = 5,
 
 
 ```
+#Here we are creating a surface area change graph for just P. str
 
 ```{r, visualization, include = TRUE}
 
@@ -482,6 +494,7 @@ ggsave("../figures/psSAgrowth.png", plot = psSAgrowthGenotype, height = 10, widt
 
 
 ```
+#Here we are combining all of the surface area percent change figures (grouped by species)
 
 ```{r}
 library(ggplot2)
@@ -497,17 +510,13 @@ percentChange <- annotate_figure(
                   color = "black", face = "bold", size = 24))
 
 
-# ggarrange(
-#   dlSApercentChange,                
-#   ggarrange(pcSApercentChange, psSApercentChange, ncol = 2, labels = c("B", "C")), 
-#   nrow = 2, 
-#   labels = "A"      
-#   ) 
 percentChange
 
 ggsave("../figures/percentChange.png", plot = percentChange, height = 15, width = 20, units = 'in',dpi = 600)
 
 ```
+#Here we are showing a different method of combining all of the surface area percent change figures (grouped by species)
+
 ```{r}
 
 percentChange.1<-dlSApercentChange+ pcSApercentChange+psSApercentChange+plot_layout(nrow = 2, byrow = FALSE)+plot_annotation(title = 'Surface Area Percent Change',
@@ -518,7 +527,7 @@ percentChange.1
 ggsave("../figures/percentChange.1.png", plot = percentChange.1, height = 15, width = 20, units = 'in',dpi = 600)
 ```
 
-Now we will run a paired t-test to determine if the percent change in surface area of the frags varies from the wilds. First, we need to assess normality via the shapiro-wilk test for normal distribution and the Levene's Test to test for homogeneity of variance. If neither is significant, we will conduct a t-test.
+#Now we will run a paired t-test to determine if the percent change in surface area of the frags varies from the wilds. First, we need to assess normality via the shapiro-wilk test for normal distribution and the Levene's Test to test for homogeneity of variance. If neither is significant, we will conduct a t-test.
 ```{r}
 dlsaFragTest <- dlsaChange %>%
   select(id, treatment, percentChange) %>%
@@ -566,8 +575,6 @@ pssaTest <- left_join(pssaFragTest, pssaWildTest, by = c("id"), copy = FALSE) %>
   dplyr::rename(psfragpercentChange = percentChange.x) %>%
   dplyr::rename(pswildpercentChange = percentChange.y)
 ```
-
-
 
 
 
@@ -708,7 +715,7 @@ changeLManova
 
 
 ```
-
+#Here we are creating a figure for the mean percent change of each species. Included in this figure are error bars derived from the standard deviation divided by the square root of the sample size (n)
 
 ```{r, visualization, include = TRUE}
 se <- function(x) sqrt(var(x) / length(x))
@@ -761,7 +768,7 @@ ggsave("../figures/SApercentChange.png", plot = SApercentChange, height = 15, wi
 
 ```
 
-
+#Here we are creating a figure for the mean T0, T3, and T6 surface area of each species. Included in this figure are error bars derived from the standard deviation divided by the square root of the sample size (n)
 
 ```{r, visualization, include = TRUE}
 
