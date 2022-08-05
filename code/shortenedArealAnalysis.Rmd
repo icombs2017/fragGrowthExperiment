@@ -740,7 +740,7 @@ SApercentChange.1 <- ggplot(totalChangeSe, aes(x = treatment, y = meanPC, fill =
     ggtitle("Surface Area Percent Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c( "#EAA65D","#0D3B66"))+    
     xlab("Treatment") + ylab("Percent Change (%)")+
   geom_errorbar( aes(x=treatment, ymin=meanPC-se, ymax=meanPC+se), position = position_dodge()) +
-    ggtitle("Mean Percent Change in Surface Area of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c("#0D3B66","#EAA65D"))+    
+    ggtitle("Mean Percent Change in Surface Area of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c("#0EBEBE","#9FA0FF"))+    
     xlab("Treatment") + ylab("Percent Change (%)")
 SApercentChange.1
 
@@ -750,9 +750,9 @@ SApercentChange<- SApercentChange.1 + theme(
   plot.title = element_blank(), 
   axis.line = element_line(colour = "black"), 
   axis.ticks = element_line(color="black"), 
-  text = element_text(size = 22, color="black"), 
-  axis.text.x=element_text(size = 18, color="black"), 
-  axis.text.y=element_text(size = 18, color="black"),
+  text = element_text(size = 35, color="black"), 
+  axis.text.x=element_text(size = 31, color="black"), 
+  axis.text.y=element_text(size = 31, color="black"),
   legend.position = "right")
 
 SApercentChange
@@ -761,29 +761,31 @@ ggsave("../figures/SApercentChange.png", plot = SApercentChange, height = 15, wi
 
 ```
 
+
+
 ```{r, visualization, include = TRUE}
 
 
 
 SAgrowth.1 <- ggplot(data=totalSAse, aes(x = treatment, y = meanSA, fill = timepoint)) +
-  geom_bar(stat = "identity", position = position_dodge())+
+  geom_bar(stat = "identity", position = position_dodge(), alpha = 0.75)+
   geom_errorbar( aes(x=treatment, ymin=meanSA-se, ymax=meanSA+se), position = position_dodge())+ 
   facet_wrap(~species)+
   scale_fill_hue(name="Time Point") +  
   labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + # Set axis labels
-    ggtitle("Mean Surface Area Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(values = c("#82CDED", "#2B4F2E", "#EAA65D"))
+    ggtitle("Mean Surface Area Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
 
 SAgrowth.1
 
 SAgrowth <- SAgrowth.1 + theme(
   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
   panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
+  plot.title = element_blank(), 
   axis.line = element_line(colour = "black"), 
   axis.ticks = element_line(color="black"), 
-  text = element_text(size = 22, color="black"), 
-  axis.text.x=element_text(size = 18, color="black"), 
-  axis.text.y=element_text(size = 18, color="black"),
+  text = element_text(size = 35, color="black"), 
+  axis.text.x=element_text(size = 31, color="black"), 
+  axis.text.y=element_text(size = 31, color="black"),
   legend.position = "right")
 
 
