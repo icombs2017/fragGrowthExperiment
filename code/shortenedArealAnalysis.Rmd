@@ -59,7 +59,10 @@ pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "strin
 ***
 ## We are downloading this dataset from our GoogleDrive folder. We will be using the package `googledrive`. Each GoogleDrive file has a unique ID that does not change throughout the lifespan of the document, even if the file name is changed. This ID is housed in the file's URL. 
 Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Below you will copy and paste that into the function `drive_download` within `as_id`. This will save the file locally in the specified path (in this case our data folder) and you will import the folder as you normally would. Downloading it this way decreases the potential human error when downloading, moving folders, renaming, saving etc and ensures that the most up to date file is being utilized. 
-```{r, loadingData, include = TRUE}
+
+#Here we are importing data for D. lab from google drive
+
+```{r, dlLoadingData, include = TRUE}
 
 
 drive_download(
@@ -73,8 +76,43 @@ dlsa
 
 
 ```
+#Here we are importing data for P. cli from google drive
+
+```{r, pcLoadingData, include = TRUE}
+
+
+drive_download(
+  as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
+  path = "../data/saDataset.xlsx", 
+  overwrite = TRUE)
+
+pcsa <- read_excel("../data/saDataset.xlsx", sheet = 4)
+
+pcsa
+
+
+```
+
+#Here we are importing data for P. str from google drive
+
+```{r, psLoadingData, include = TRUE}
+
+
+drive_download(
+  as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
+  path = "../data/saDataset.xlsx", 
+  overwrite = TRUE)
+
+pssa <- read_excel("../data/saDataset.xlsx", sheet = 5)
+
+pssa
+
+
+```
+
 ## Now I am just tidying up my dataset, I am combining two columns, **species** and **genotype** into a column **geno** using the `paste0` function, cleaning up the raw dataset to only include my species of concern using multiple functions from the package `dplyr`, and changing the class of some variables to factors using the function `as.factor()` for easier manipulation down the road.
-```{r, dataManipulation, include = TRUE}
+
+```{r, dlDataManipulation, include = TRUE}
 
 
 dlsaClean <- dlsa %>% 
@@ -100,8 +138,62 @@ head(dlsaClean)
 
 
 ```
-### Here we are breaking the data apart into frags and wilds, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2` 
-```{r, calculatingPercentChange, include = TRUE }
+```{r, pcDataManipulation, include = TRUE}
+
+
+pcsaClean <- pcsa %>% 
+  select("timepoint", "species", "genotype","id","trial","treatment","SA")
+
+
+
+
+pcsaClean$timepoint <- as.factor(pcsaClean$timepoint)
+
+pcsaClean$species <- as.factor(pcsaClean$species)
+
+pcsaClean$id <- as.factor(pcsaClean$id)
+
+pcsaClean$trial <- as.factor(pcsaClean$trial)
+
+pcsaClean$treatment <- as.factor(pcsaClean$treatment)
+
+
+
+head(pcsaClean)
+
+
+
+```
+
+```{r, dataManipulation, include = TRUE}
+
+
+pssaClean <- pssa %>% 
+  select("timepoint", "species", "genotype","id","trial","treatment","SA")
+
+
+
+
+pssaClean$timepoint <- as.factor(pssaClean$timepoint)
+
+pssaClean$species <- as.factor(pssaClean$species)
+
+pssaClean$id <- as.factor(pssaClean$id)
+
+pssaClean$trial <- as.factor(pssaClean$trial)
+
+pssaClean$treatment <- as.factor(pssaClean$treatment)
+
+
+
+head(pssaClean)
+
+
+
+```
+
+### Here we are breaking the data apart into frags and wilds for dl, pc, and ps, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2` 
+```{r, dlCalculatingPercentChange, include = TRUE }
 
 
 dlsaFrag <- dlsaClean %>%
@@ -136,119 +228,7 @@ dlsaChange$percentChange <- ((dlsaChange$finalSurfaceArea-dlsaChange$initialSurf
  
 
 ```
-#Here we are creating a percent change figure for just D. lab
-
-```{r, visualization, include = TRUE}
-
-
-
-dlSApercentChange.1 <- ggplot(data=dlsaChange, aes(x=id, y=percentChange, fill=treatment)) + 
-    geom_bar(colour="black", stat="identity",
-             position=position_dodge(),
-             size=.3) +  scale_fill_manual(name="Treatment",labels=c('Frag', 'Wild'),values = c("#82CDED", "#2B4F2E")) +     
-    xlab("ID") + ylab("Percent Change (%)") + 
-    ggtitle("D. lab") +    
-    theme_bw()
-
-
-dlSApercentChange <- dlSApercentChange.1 + theme(
-  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
-  panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
-  axis.line = element_line(colour = "black"), 
-  axis.ticks = element_line(color="black"), 
-  text = element_text(size = 22, color="black"), 
-  axis.text.x=element_text(size = 18, color="black"), 
-  axis.text.y=element_text(size = 18, color="black"),
-  legend.position = "right")
-
-dlSApercentChange.1
-
-ggsave("../figures/dlPercentSAgrowth.png", plot = dlSApercentChange, height = 5, width = 9, units = 'in',dpi = 600)
-
-
-```
-#Here we are creating a surface area change figure for just D. lab
-
-```{r, visualization, include = TRUE}
-
-
-
-dlSAgrowthGenotype.1 <- ggplot(data=dlsaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
-  geom_bar(stat = "identity", position = position_dodge())+
-  facet_wrap(~id)+
-  scale_fill_hue(name="Time Point") +  
-  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + # Set axis labels
-    ggtitle("Surface Area Growth of DL01, DL02, and DL03") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#3BB0E3", "#eba862", "#12A528"))
-
-dlSAgrowthGenotype.1
-
-dlSAgrowthGenotype <- dlSAgrowthGenotype.1 + theme(
-  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
-  panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
-  axis.line = element_line(colour = "black"), 
-  axis.ticks = element_line(color="black"), 
-  text = element_text(size = 22, color="black"), 
-  axis.text.x=element_text(size = 18, color="black"), 
-  axis.text.y=element_text(size = 18, color="black"),
-  legend.position = "right")
-
-
-dlSAgrowthGenotype
-
-ggsave("../figures/dlSAgrowth.png", plot = dlSAgrowthGenotype, height = 5, width = 9, units = 'in',dpi = 600)
-
-
-
-```
-#Here we are importing data for P. cli from google drive
-
-```{r, loadingData, include = TRUE}
-
-
-drive_download(
-  as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
-  path = "../data/saDataset.xlsx", 
-  overwrite = TRUE)
-
-pcsa <- read_excel("../data/saDataset.xlsx", sheet = 4)
-
-pcsa
-
-
-```
-## Now I am just tidying up my dataset, I am combining two columns, **species** and **genotype** into a column **geno** using the `paste0` function, cleaning up the raw dataset to only include my species of concern using multiple functions from the package `dplyr`, and changing the class of some variables to factors using the function `as.factor()` for easier manipulation down the road.
-
-```{r, dataManipulation, include = TRUE}
-
-
-pcsaClean <- pcsa %>% 
-  select("timepoint", "species", "genotype","id","trial","treatment","SA")
-
-
-
-
-pcsaClean$timepoint <- as.factor(pcsaClean$timepoint)
-
-pcsaClean$species <- as.factor(pcsaClean$species)
-
-pcsaClean$id <- as.factor(pcsaClean$id)
-
-pcsaClean$trial <- as.factor(pcsaClean$trial)
-
-pcsaClean$treatment <- as.factor(pcsaClean$treatment)
-
-
-
-head(pcsaClean)
-
-
-
-```
-### Here we are breaking the data apart into frags and wilds, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2`
-
-```{r, calculatingPercentChange, include = TRUE }
+```{r, pcCalculatingPercentChange, include = TRUE }
 
 
 pcsaFrag <- pcsaClean %>%
@@ -283,118 +263,8 @@ pcsaChange$percentChange <- ((pcsaChange$finalSurfaceArea-pcsaChange$initialSurf
  
 
 ```
-#Here we are creating a surface area percent change figure for just P. cli
 
-```{r, visualization, include = TRUE}
-
-
-
-pcSApercentChange.1 <- ggplot(data=pcsaChange, aes(x=id, y=percentChange, fill=treatment)) + 
-    geom_bar(colour="black", stat="identity",
-             position=position_dodge(),
-             size=.3) + scale_fill_manual(name="Treatment",labels=c('Frag', 'Wild'),values = c("#82CDED", "#2B4F2E")) +   
-    xlab("ID") + ylab("Percent Change (%)") + # Set axis labels
-    ggtitle("P. cli") +     # Set title
-    theme_bw()
-
-pcSApercentChange <- pcSApercentChange.1 + theme(
-  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
-  panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
-  axis.line = element_line(colour = "black"), 
-  axis.ticks = element_line(color="black"), 
-  text = element_text(size = 22, color="black"), 
-  axis.text.x=element_text(size = 18, color="black"), 
-  axis.text.y=element_text(size = 18, color="black"),
-  legend.position = "right")
-
-pcSApercentChange
-
-ggsave("../figures/pcPercentSAgrowth.png", plot = pcSApercentChange, height = 5, width = 9, units = 'in',dpi = 600)
-
-
-```
-#Here we are creating a surface area change figure for just P. cli
-
-```{r, visualization, include = TRUE}
-
-
-
-pcSAgrowthGenotype.1 <- ggplot(data=pcsaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
-  geom_bar(stat = "identity", position = position_dodge())+
-  facet_wrap(~id)+
-  scale_fill_hue(name="Time Point") +  
-  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + # Set axis labels
-    ggtitle("Surface Area Growth of PC13, PC15, and PC16") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#3BB0E3", "#eba862", "#80f191"))
-
-pcSAgrowthGenotype.1
-
-pcSAgrowthGenotype <- pcSAgrowthGenotype.1 + theme(
-  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
-  panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
-  axis.line = element_line(colour = "black"), 
-  axis.ticks = element_line(color="black"), 
-  text = element_text(size = 22, color="black"), 
-  axis.text.x=element_text(size = 18, color="black"), 
-  axis.text.y=element_text(size = 18, color="black"),
-  legend.position = "right")
-
-
-pcSAgrowthGenotype
-
-ggsave("../figures/pcSAgrowth.png", plot = pcSAgrowthGenotype, height = 5, width = 9, units = 'in',dpi = 600)
-
-
-
-```
-#Here we are importing data for P. str
-
-```{r, loadingData, include = TRUE}
-
-
-drive_download(
-  as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
-  path = "../data/saDataset.xlsx", 
-  overwrite = TRUE)
-
-pssa <- read_excel("../data/saDataset.xlsx", sheet = 5)
-
-pssa
-
-
-```
-## Now I am just tidying up my dataset, I am combining two columns, **species** and **genotype** into a column **geno** using the `paste0` function, cleaning up the raw dataset to only include my species of concern using multiple functions from the package `dplyr`, and changing the class of some variables to factors using the function `as.factor()` for easier manipulation down the road.
-
-```{r, dataManipulation, include = TRUE}
-
-
-pssaClean <- pssa %>% 
-  select("timepoint", "species", "genotype","id","trial","treatment","SA")
-
-
-
-
-pssaClean$timepoint <- as.factor(pssaClean$timepoint)
-
-pssaClean$species <- as.factor(pssaClean$species)
-
-pssaClean$id <- as.factor(pssaClean$id)
-
-pssaClean$trial <- as.factor(pssaClean$trial)
-
-pssaClean$treatment <- as.factor(pssaClean$treatment)
-
-
-
-head(pssaClean)
-
-
-
-```
-### Here we are breaking the data apart into frags and wilds, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2`
-
-```{r, calculatingPercentChange, include = TRUE }
+```{r, psCalculatingPercentChange, include = TRUE }
 
 
 pssaFrag <- pssaClean %>%
@@ -429,16 +299,78 @@ pssaChange$percentChange <- ((pssaChange$finalSurfaceArea-pssaChange$initialSurf
  
 
 ```
-#Here we are creating a surface area percent change graph for just P. str
 
-```{r, visualization, include = TRUE}
+#Here we are creating percent change figures for dl, pc, and ps using 'ggplot'
+
+```{r, dlSApercentChangeVisualization, include = TRUE}
+
+
+
+dlSApercentChange.1 <- ggplot(data=dlsaChange, aes(x=id, y=percentChange, fill=treatment)) + 
+    geom_bar(colour="black", stat="identity",
+             position=position_dodge(),
+             size=.3) +  scale_fill_manual(name="Treatment",labels=c('Frag', 'Wild'),values = c("#0EBEBE","#9FA0FF")) +     
+    xlab("ID") + ylab("Percent Change (%)") + 
+    ggtitle("D. lab") +    
+    theme_bw()
+
+
+dlSApercentChange <- dlSApercentChange.1 + theme(
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+  panel.background = element_rect(fill = '#F5F5F5'),
+  plot.title = element_text(hjust = 0.5), 
+  axis.line = element_line(colour = "black"), 
+  axis.ticks = element_line(color="black"), 
+  text = element_text(size = 22, color="black"), 
+  axis.text.x=element_text(size = 18, color="black"), 
+  axis.text.y=element_text(size = 18, color="black"),
+  legend.position = "right")
+
+dlSApercentChange.1
+
+ggsave("../figures/dlPercentSAgrowth.png", plot = dlSApercentChange, height = 5, width = 9, units = 'in',dpi = 600)
+
+
+```
+
+```{r, pcSApercentChangeVisualization, include = TRUE}
+
+
+
+pcSApercentChange.1 <- ggplot(data=pcsaChange, aes(x=id, y=percentChange, fill=treatment)) + 
+    geom_bar(colour="black", stat="identity",
+             position=position_dodge(),
+             size=.3) + scale_fill_manual(name="Treatment",labels=c('Frag', 'Wild'),values = c("#0EBEBE","#9FA0FF")) +   
+    xlab("ID") + ylab("Percent Change (%)") + # Set axis labels
+    ggtitle("P. cli") +     # Set title
+    theme_bw()
+
+pcSApercentChange <- pcSApercentChange.1 + theme(
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+  panel.background = element_rect(fill = '#F5F5F5'),
+  plot.title = element_text(hjust = 0.5), 
+  axis.line = element_line(colour = "black"), 
+  axis.ticks = element_line(color="black"), 
+  text = element_text(size = 22, color="black"), 
+  axis.text.x=element_text(size = 18, color="black"), 
+  axis.text.y=element_text(size = 18, color="black"),
+  legend.position = "right")
+
+pcSApercentChange
+
+ggsave("../figures/pcPercentSAgrowth.png", plot = pcSApercentChange, height = 5, width = 9, units = 'in',dpi = 600)
+
+
+```
+
+```{r, psSApercentChangeVisualization, include = TRUE}
 
 
 
 psSApercentChange.1 <- ggplot(data=pssaChange, aes(x=id, y=percentChange, fill=treatment)) + 
     geom_bar(colour="black", stat="identity",
              position=position_dodge(),
-             size=.3) +scale_fill_manual(name="Treatment",labels=c('Frag', 'Wild'),values = c("#82CDED", "#2B4F2E"))+      
+             size=.3) +scale_fill_manual(name="Treatment",labels=c('Frag', 'Wild'),values = c("#0EBEBE","#9FA0FF"))+      
     xlab("ID") + ylab("Percent Change (%)") + 
     ggtitle("P. str") +     
     theme_bw()
@@ -460,9 +392,75 @@ ggsave("../figures/psPercentSAgrowth.png", plot = psSApercentChange, height = 5,
 
 
 ```
-#Here we are creating a surface area change graph for just P. str
 
-```{r, visualization, include = TRUE}
+#Here we are creating a change in surface area figure for dl, pc, and ps using 'ggplot'
+
+```{r, dlSAgrowthGenotypeVisualization, include = TRUE}
+
+
+
+dlSAgrowthGenotype.1 <- ggplot(data=dlsaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
+  geom_bar(stat = "identity", position = position_dodge())+
+  facet_wrap(~id)+
+  scale_fill_hue(name="Time Point") +  
+  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + 
+    ggtitle("Surface Area Growth of DL01, DL02, and DL03") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
+
+dlSAgrowthGenotype.1
+
+dlSAgrowthGenotype <- dlSAgrowthGenotype.1 + theme(
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+  panel.background = element_rect(fill = '#F5F5F5'),
+  plot.title = element_text(hjust = 0.5), 
+  axis.line = element_line(colour = "black"), 
+  axis.ticks = element_line(color="black"), 
+  text = element_text(size = 22, color="black"), 
+  axis.text.x=element_text(size = 18, color="black"), 
+  axis.text.y=element_text(size = 18, color="black"),
+  legend.position = "right")
+
+
+dlSAgrowthGenotype
+
+ggsave("../figures/dlSAgrowth.png", plot = dlSAgrowthGenotype, height = 5, width = 9, units = 'in',dpi = 600)
+
+
+
+```
+```{r, pcSAgrowthGenotypeVisualization, include = TRUE}
+
+
+
+pcSAgrowthGenotype.1 <- ggplot(data=pcsaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
+  geom_bar(stat = "identity", position = position_dodge())+
+  facet_wrap(~id)+
+  scale_fill_hue(name="Time Point") +  
+  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + 
+    ggtitle("Surface Area Growth of PC13, PC15, and PC16") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
+
+pcSAgrowthGenotype.1
+
+pcSAgrowthGenotype <- pcSAgrowthGenotype.1 + theme(
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+  panel.background = element_rect(fill = '#F5F5F5'),
+  plot.title = element_text(hjust = 0.5), 
+  axis.line = element_line(colour = "black"), 
+  axis.ticks = element_line(color="black"), 
+  text = element_text(size = 22, color="black"), 
+  axis.text.x=element_text(size = 18, color="black"), 
+  axis.text.y=element_text(size = 18, color="black"),
+  legend.position = "right")
+
+
+pcSAgrowthGenotype
+
+ggsave("../figures/pcSAgrowth.png", plot = pcSAgrowthGenotype, height = 5, width = 9, units = 'in',dpi = 600)
+
+
+
+```
+
+```{r, psSAgrowthGenotypeVisualization, include = TRUE}
 
 
 
@@ -470,8 +468,8 @@ psSAgrowthGenotype.1 <- ggplot(data=pssaFinal, aes(x = treatment, y = SA, fill =
   geom_bar(stat = "identity", position = position_dodge())+
   facet_wrap(~id)+
   scale_fill_hue(name="Time Point") +  
-  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + # Set axis labels
-    ggtitle("Surface Area Growth of PS07, PS11, PS12, PS13, and PS14") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#82CDED", "#2B4F2E", "#EAA65D"))
+  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + 
+    ggtitle("Surface Area Growth of PS07, PS11, PS12, PS13, and PS14") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
 
 psSAgrowthGenotype.1
 
@@ -494,9 +492,10 @@ ggsave("../figures/psSAgrowth.png", plot = psSAgrowthGenotype, height = 10, widt
 
 
 ```
+
 #Here we are combining all of the surface area percent change figures (grouped by species)
 
-```{r}
+```{r, combinedSApercentChangeVisualization , include = TRUE}
 library(ggplot2)
 library(ggpubr)
 theme_set(theme_pubr())
@@ -515,20 +514,10 @@ percentChange
 ggsave("../figures/percentChange.png", plot = percentChange, height = 15, width = 20, units = 'in',dpi = 600)
 
 ```
-#Here we are showing a different method of combining all of the surface area percent change figures (grouped by species)
-
-```{r}
-
-percentChange.1<-dlSApercentChange+ pcSApercentChange+psSApercentChange+plot_layout(nrow = 2, byrow = FALSE)+plot_annotation(title = 'Surface Area Percent Change',
-                  theme = theme(plot.title = element_text(size = 24)))
-
-percentChange.1
-
-ggsave("../figures/percentChange.1.png", plot = percentChange.1, height = 15, width = 20, units = 'in',dpi = 600)
-```
 
 #Now we will run a paired t-test to determine if the percent change in surface area of the frags varies from the wilds. First, we need to assess normality via the shapiro-wilk test for normal distribution and the Levene's Test to test for homogeneity of variance. If neither is significant, we will conduct a t-test.
-```{r}
+
+```{r,dlPercentChangeTest,include = TRUE}
 dlsaFragTest <- dlsaChange %>%
   select(id, treatment, percentChange) %>%
   dplyr::filter(treatment %in% 'frag') %>%
@@ -543,8 +532,7 @@ dlsaTest <- left_join(dlsaFragTest, dlsaWildTest, by = c("id"), copy = FALSE) %>
   dplyr::rename(wildpercentChange = percentChange.y)
 ```
 
-
-```{r}
+```{r,pcPercentChangeTest,include = TRUE}
 pcsaFragTest <- pcsaChange %>%
   select(id, treatment, percentChange) %>%
   dplyr::filter(treatment %in% 'frag') %>%
@@ -559,9 +547,7 @@ pcsaTest <- left_join(pcsaFragTest, pcsaWildTest, by = c("id"), copy = FALSE) %>
   dplyr::rename(pcwildpercentChange = percentChange.y)
 ```
 
-
-
-```{r}
+```{r,psPercentChangeTest,include = TRUE}
 pssaFragTest <- pssaChange %>%
   select(id, treatment, percentChange) %>%
   dplyr::filter(treatment %in% 'frag') %>%
@@ -575,8 +561,6 @@ pssaTest <- left_join(pssaFragTest, pssaWildTest, by = c("id"), copy = FALSE) %>
   dplyr::rename(psfragpercentChange = percentChange.x) %>%
   dplyr::rename(pswildpercentChange = percentChange.y)
 ```
-
-
 
 # Combining Data
 ***
@@ -655,7 +639,6 @@ totalChange <- totalChangeMelt
 
 ```
 
-
 # Normality testing and Data Transformation
 ***
 ## Here we are testing for normality of the raw SA data, and if not normally distributed, we are transforming the data to see if that will fit a normal distribution.
@@ -682,12 +665,12 @@ shapiro.test(totalSA$logSA)
 
 
 ```
+
 # Statistical Analyses
 ***
 ## With our newly formed dataset and our transformed data, we are now going to perform some Repeated Measures Analyses of variance using the `lmer()` function from the package `lme4`. We are testing our logtransformed raw SA data as well as our percent change data with **treatment** and **timepoint** as factors and **id** as a random effect.
 
-
-```{r, repeated measures, include = TRUE}
+```{r, repeatedMeasures, include = TRUE}
 
 
 logTotalLM <- lmer(logSA ~ species*treatment*timepoint + (1 | id), totalSA)
@@ -695,17 +678,9 @@ logTotalLManova <- ranova(logTotalLM)
 logTotalLManova
 
 
-
 eta_sq(logTotalLM, partial = TRUE)
 r.squaredGLMM(logTotalLM)
 emmeans(logTotalLM, list(pairwise ~ timepoint), adjust = 'bonferroni')
-
-
-
-# 
-# percentChangeAOV <- aov(percentChange ~ treatment, totalChangeSA )
-# summary(percentChangeAOV)
-
 
 
 changeLM <- lmer(percentChange ~ species*treatment*timepoint + (1 | id), totalChange)
@@ -715,9 +690,10 @@ changeLManova
 
 
 ```
+
 #Here we are creating a figure for the mean percent change of each species. Included in this figure are error bars derived from the standard deviation divided by the square root of the sample size (n)
 
-```{r, visualization, include = TRUE}
+```{r, meanPercentChangeVisualization, include = TRUE}
 se <- function(x) sqrt(var(x) / length(x))
 
 totalSAse <- totalSA %>%
@@ -738,8 +714,6 @@ dplyr::select(timepoint, species, treatment,percentChange) %>%
     n = n(),
     se = sd/sqrt(n))
 
-# totalSA$se <- se(totalSA$SA)
-# totalChange$se <-se(totalChange$percentChange)
 
 SApercentChange.1 <- ggplot(totalChangeSe, aes(x = treatment, y = meanPC, fill = timepoint)) +
   geom_bar(stat = "identity", position = position_dodge())+
@@ -770,7 +744,7 @@ ggsave("../figures/SApercentChange.png", plot = SApercentChange, height = 15, wi
 
 #Here we are creating a figure for the mean T0, T3, and T6 surface area of each species. Included in this figure are error bars derived from the standard deviation divided by the square root of the sample size (n)
 
-```{r, visualization, include = TRUE}
+```{r, meanSAgrowthVisualization, include = TRUE}
 
 
 
@@ -779,7 +753,7 @@ SAgrowth.1 <- ggplot(data=totalSAse, aes(x = treatment, y = meanSA, fill = timep
   geom_errorbar( aes(x=treatment, ymin=meanSA-se, ymax=meanSA+se), position = position_dodge())+ 
   facet_wrap(~species)+
   scale_fill_hue(name="Time Point") +  
-  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + # Set axis labels
+  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + 
     ggtitle("Mean Surface Area Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
 
 SAgrowth.1
@@ -802,30 +776,3 @@ ggsave("../figures/SAgrowth.png", plot = SAgrowth, height = 15, width = 20, unit
 
 ```
 
-
-```{r, visualization, include = TRUE}
-
-
-# meanPercentChange.1 <- ggplot(meanDataSet, aes(x = timepoint, y = meanPercentChange, fill = treatment)) +
-#   geom_bar(stat = "identity", position = position_dodge())+
-#   facet_wrap(~species)+
-#     ggtitle("Mean Surface Area Percent Growth of D. labyrinthiformis, P. clivosa, and P. strigosa Over Six Months") +scale_fill_manual(name="Time Point",labels=c("frag" = "Frag", "wild" = "Whole"),values = c( "#EAA65D","#0D3B66"))+    
-#     xlab("Time Point") + ylab("Percent Change (%)")
-# meanPercentChange.1
-# 
-# meanPercentChange<- meanPercentChange.1 + theme(
-#   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
-#   panel.background = element_rect(fill = '#F5F5F5'),
-#   plot.title = element_text(hjust = 0.5), 
-#   axis.line = element_line(colour = "black"), 
-#   axis.ticks = element_line(color="black"), 
-#   text = element_text(size = 35, color="black"), 
-#   axis.text.x=element_text(size = 31, color="black"), 
-#   axis.text.y=element_text(size = 31, color="black"),
-#   legend.position = "right")
-# 
-# meanPercentChange
-# 
-# ggsave("../figures/meanPercentChange.png", plot = meanPercentChange, height = 15, width = 30, units = 'in',dpi = 600)
-
-```
