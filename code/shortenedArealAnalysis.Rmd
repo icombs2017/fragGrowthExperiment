@@ -48,9 +48,8 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork", "FSA", "rstatix", "tidyverse", "lme4", 'PMCRMplus', "EnvStats", "emmeans", "MuMIn", "sjstats", "lmerTest")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "googledrive", "gdata", "readxl", "DescTools","patchwork", "FSA", "rstatix", "tidyverse", "lme4", 'PMCRMplus', "EnvStats", "emmeans", "MuMIn", "sjstats", "lmerTest")
 
-#IF YOU WANT TO RUN PAIRWISE PERMANOVA REMEMBER TO INSTALL PAIRWISE ADONIS
 
 ```
 
@@ -60,17 +59,17 @@ pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "strin
 ## We are downloading this dataset from our GoogleDrive folder. We will be using the package `googledrive`. Each GoogleDrive file has a unique ID that does not change throughout the lifespan of the document, even if the file name is changed. This ID is housed in the file's URL. 
 Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Below you will copy and paste that into the function `drive_download` within `as_id`. This will save the file locally in the specified path (in this case our data folder) and you will import the folder as you normally would. Downloading it this way decreases the potential human error when downloading, moving folders, renaming, saving etc and ensures that the most up to date file is being utilized. 
 
-#Here we are importing data for D. lab from google drive
+# Here we are importing data for D. lab from google drive
 
 ```{r, dlLoadingData, include = TRUE}
 
 
 drive_download(
   as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
-  path = "../data/saDataset.xlsx", 
+  path = "../data/saDatasetDL.xlsx", 
   overwrite = TRUE)
 
-dlsa <- read_excel("../data/saDataset.xlsx", sheet = 3)
+dlsa <- read_excel("../data/saDatasetDL.xlsx", sheet = 3)
 
 dlsa
 
@@ -83,10 +82,10 @@ dlsa
 
 drive_download(
   as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
-  path = "../data/saDataset.xlsx", 
+  path = "../data/saDatasetPC.xlsx", 
   overwrite = TRUE)
 
-pcsa <- read_excel("../data/saDataset.xlsx", sheet = 4)
+pcsa <- read_excel("../data/saDatasetPC.xlsx", sheet = 4)
 
 pcsa
 
@@ -100,17 +99,36 @@ pcsa
 
 drive_download(
   as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
-  path = "../data/saDataset.xlsx", 
+  path = "../data/saDatasetPS.xlsx", 
   overwrite = TRUE)
 
-pssa <- read_excel("../data/saDataset.xlsx", sheet = 5)
+pssa <- read_excel("../data/saDatasetPS.xlsx", sheet = 5)
 
 pssa
 
 
 ```
 
+
+```{r}
+
+drive_download(
+  as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
+  path = "../data/saDatasetTotal.xlsx", 
+  overwrite = TRUE)
+
+total <- read_excel("../data/saDatasetTotal.xlsx", sheet = 1)
+
+total
+
+```
+
+
+
+
 ## Now I am just tidying up my dataset, I am combining two columns, **species** and **genotype** into a column **geno** using the `paste0` function, cleaning up the raw dataset to only include my species of concern using multiple functions from the package `dplyr`, and changing the class of some variables to factors using the function `as.factor()` for easier manipulation down the road.
+
+
 
 ```{r, dlDataManipulation, include = TRUE}
 
@@ -192,7 +210,39 @@ head(pssaClean)
 
 ```
 
-### Here we are breaking the data apart into frags and wilds for dl, pc, and ps, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2` 
+```{r, totalClean, include = TRUE}
+
+
+totalClean <- total %>% 
+  select("timePoint", "species", "id","trial","treatment","surfaceArea (cm^2)") %>% 
+  filter(species %in% c("DL", "PC", "PS")) %>% 
+  filter(timePoint %in% c("initial", "T3", "T6")) %>% 
+  dplyr::rename("SA" = "surfaceArea (cm^2)") 
+
+
+  totalClean$timePoint <- gsub("initial", "T0", totalClean$timePoint)
+
+
+totalClean$timepoint <- as.factor(totalClean$timePoint)
+
+totalClean$species <- as.factor(totalClean$species)
+
+totalClean$id <- as.factor(totalClean$id)
+
+totalClean$trial <- as.factor(totalClean$trial)
+
+totalClean$treatment <- as.factor(totalClean$treatment)
+
+
+
+
+
+```
+
+
+
+### Here we are breaking the data apart into frags and wilds for dl, pc, and ps, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2`
+
 ```{r, dlCalculatingPercentChange, include = TRUE }
 
 
@@ -299,6 +349,55 @@ pssaChange$percentChange <- ((pssaChange$finalSurfaceArea-pssaChange$initialSurf
  
 
 ```
+
+
+
+```{r, totalPercentChange, include = TRUE }
+
+
+totalFrag <- totalClean %>%
+  select(timepoint, species, id, treatment, SA) %>%
+  dplyr::filter(treatment %in% 'frag') %>%
+  dplyr::group_by(timepoint, species, id, treatment) %>%
+  dplyr::summarise(sum(SA)) %>% 
+  dplyr::rename("SA" = "sum(SA)")
+
+totalWild <- totalClean %>%
+  dplyr::filter(treatment %in% 'wild') %>%
+  select(timepoint, species, id, treatment, SA)
+
+totalCombo <- bind_rows(totalFrag,totalWild)
+
+totalFinal <- totalCombo %>%
+  dplyr::filter(timepoint %in% c("T0","T3","T6")) %>%
+  select(c('timepoint','species','id','treatment', "SA"))
+
+
+
+totalChange <- dcast(totalFinal, id+treatment~timepoint) 
+
+
+totalChange <- dplyr::rename(totalChange, "initialSurfaceArea" = "T0", "finalSurfaceArea" = "T6")
+totalChange
+totalChange$difference <- (totalChange$finalSurfaceArea-totalChange$initialSurfaceArea)
+totalChange$percentChange <- ((totalChange$finalSurfaceArea-totalChange$initialSurfaceArea)/totalChange$initialSurfaceArea)*100
+
+ 
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #Here we are creating percent change figures for dl, pc, and ps using 'ggplot'
 
