@@ -115,7 +115,7 @@ bwTiles <- bw %>%
 
 
 bwFinalTiles <- bwTiles %>% 
-  dplyr::filter(timePoint %in% c("0","4")) %>%
+  dplyr::filter(timePoint %in% c("0","3", "6")) %>%
   select(c('timePoint','trial','ID','dryWeight'))
 
 meanTiles <- mean(bwFinalTiles$dryWeight)
@@ -128,10 +128,12 @@ meanTiles <- mean(bwFinalTiles$dryWeight)
 
 bwTileChange <- dcast(bwFinalTiles, trial+ID~timePoint) 
 
-bwTileChange <- dplyr::rename(bwTileChange, "initialDryWeight" = "0", "finalDryWeight" = "4")
+bwTileChange <- dplyr::rename(bwTileChange, "T0" = "0", "T3" = "3", "T6" = "6")
 bwTileChange
 
-bwTileChange$percentChange <- ((bwTileChange$finalDryWeight-bwTileChange$initialDryWeight)/bwTileChange$initialDryWeight)*100
+bwTileChange$percentChangeFirstInterval <- ((bwTileChange$T3-bwTileChange$T0)/bwTileChange$T0)*100
+bwTileChange$percentChangeSecondInterval <- ((bwTileChange$T6-bwTileChange$T3)/bwTileChange$T3)*100
+bwTileChange$percentChangeTotalInterval <- ((bwTileChange$T6-bwTileChange$T0)/bwTileChange$T0)*100
 
 
 
@@ -141,7 +143,7 @@ bwPlugs <- bw %>%
   dplyr::filter(ID %in% "plugs")
 
 bwFinalPlugs <- bwPlugs %>% 
-  dplyr::filter(timePoint %in% c("0","4")) %>%
+  dplyr::filter(timePoint %in% c("0","3", "6")) %>%
   select(c('timePoint','trial','ID','dryWeight'))
 
 
