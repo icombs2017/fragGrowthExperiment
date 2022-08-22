@@ -147,15 +147,15 @@ meanTiles <- mean(bwTiles$dryWeight)
 
 
 
-bwTileChange <- dcast(bwTiles, trial+ID~timePoint) 
-
-bwTileChange <- dplyr::rename(bwTileChange, "T0" = "0", "T3" = "3", "T6" = "6")
-bwTileChange
-
-bwTileChange$percentChangeFirstInterval <- ((bwTileChange$T3-bwTileChange$T0)/bwTileChange$T0)*100
-bwTileChange$percentChangeSecondInterval <- ((bwTileChange$T6-bwTileChange$T3)/bwTileChange$T3)*100
-bwTileChange$percentChangeTotalInterval <- ((bwTileChange$T6-bwTileChange$T0)/bwTileChange$T0)*100
-
+# bwTileChange <- dcast(bwTiles, trial+ID~timePoint) 
+# 
+# bwTileChange <- dplyr::rename(bwTileChange, "T0" = "0", "T3" = "3", "T6" = "6")
+# bwTileChange
+# 
+# bwTileChange$percentChangeFirstInterval <- ((bwTileChange$T3-bwTileChange$T0)/bwTileChange$T0)*100
+# bwTileChange$percentChangeSecondInterval <- ((bwTileChange$T6-bwTileChange$T3)/bwTileChange$T3)*100
+# bwTileChange$percentChangeTotalInterval <- ((bwTileChange$T6-bwTileChange$T0)/bwTileChange$T0)*100
+# 
 
 
 
@@ -164,14 +164,16 @@ bwPlugs <- bwTime %>%
   dplyr::filter(ID %in% "plugs")
 
 
-bwTileChange <- melt(bwTileChange)
 
 
 
 
 bwPlugs$avgPlug <- bwPlugs$dryWeight/5
 
-bw
+#might need to multiply every genotype by n and average plugs in trial to make this work -_-
+
+
+
 
 ```
 
@@ -359,6 +361,72 @@ otherWeirdPlot <- ggplot(alsoWeird, aes(x = timePoint, y = dryWeight, color = ge
   ggsave("../figures/plotAnomaly.png", plot = totalWeirdness, width = 10, height = 10, units = "in", dpi = 600)
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
