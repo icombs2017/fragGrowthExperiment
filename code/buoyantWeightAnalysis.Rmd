@@ -80,9 +80,17 @@ bw$genotype <- as.character(bw$genotype)
 
 bw$geno <- paste0(bw$species, bw$genotype)
 
+bw$species <- as.factor(bw$species)
+
+bwBlanks <- bw %>% 
+  select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight") %>% 
+  dplyr::filter(ID %in% c("plugs", "tile"))
+  
 bwClean <- bw %>% 
   select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight") %>% 
-  dplyr::filter(species %in% c("ps", "pc", "dl"))
+  dplyr::filter(species %in% c("pc", "ps", "dl"))
+
+bwClean <- rbind(bwClean, bwBlanks)
 
 
 bwClean$timePoint <- as.factor(bwClean$timePoint)
@@ -103,30 +111,43 @@ head(bwClean)
 
 ```
 
+***
+## Here I am going to separate our data into only the time points we want. In this case, it is first (T0), middle (T3) and final (T6). 
+
+```{r, sepTimePoints, include = TRUE}
+
+
+bwTime <- bwClean %>% 
+  dplyr::select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight") %>% 
+  dplyr::filter(timePoint %in% c("0", "3", "6"))
+
+
+
+
+
+```
+
+
+
+
 
 ## Here I am going to make the corrections from the blank plugs and tiles and incorporate them into our dry weight measurements. We had a blank tile and 5 blank plugs in each raceway to account for algae growth and fouling oraganisms (mainly tube worms) fouling our corals. 
 
 ```{r, blankCorrection, include = TRUE}
 
 
-bwTiles <- bw %>% 
-  select("timePoint", "trial", "ID", "dryWeight") %>% 
+bwTiles <- bwTime %>% 
+  select("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight") %>% 
   dplyr::filter(ID %in% "tile")
 
 
-bwFinalTiles <- bwTiles %>% 
-  dplyr::filter(timePoint %in% c("0","3", "6")) %>%
-  select(c('timePoint','trial','ID','dryWeight'))
 
-meanTiles <- mean(bwFinalTiles$dryWeight)
+
+meanTiles <- mean(bwTiles$dryWeight)
 
 
 
-
-
-
-
-bwTileChange <- dcast(bwFinalTiles, trial+ID~timePoint) 
+bwTileChange <- dcast(bwTiles, trial+ID~timePoint) 
 
 bwTileChange <- dplyr::rename(bwTileChange, "T0" = "0", "T3" = "3", "T6" = "6")
 bwTileChange
@@ -138,18 +159,19 @@ bwTileChange$percentChangeTotalInterval <- ((bwTileChange$T6-bwTileChange$T0)/bw
 
 
 
-bwPlugs <- bw %>% 
-  select("timePoint", "trial", "ID", "dryWeight") %>% 
+bwPlugs <- bwTime %>% 
+  select("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight") %>% 
   dplyr::filter(ID %in% "plugs")
 
-bwFinalPlugs <- bwPlugs %>% 
-  dplyr::filter(timePoint %in% c("0","3", "6")) %>%
-  select(c('timePoint','trial','ID','dryWeight'))
+
+bwTileChange <- melt(bwTileChange)
 
 
-bwFinalPlugs$avgPlug <- bwFinalPlugs$dryWeight/5
 
 
+bwPlugs$avgPlug <- bwPlugs$dryWeight/5
+
+bw
 
 ```
 
