@@ -44,7 +44,7 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork","reshape2")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork","reshape2", "lme4", "lmerTest")
 
 
 
@@ -147,6 +147,8 @@ meanTiles <- mean(bwTiles$dryWeight)
 
 
 
+#BELOW MIGHT NOT BE NECESSARY, NOT SURE
+
 # bwTileChange <- dcast(bwTiles, trial+ID~timePoint) 
 # 
 # bwTileChange <- dplyr::rename(bwTileChange, "T0" = "0", "T3" = "3", "T6" = "6")
@@ -169,6 +171,7 @@ bwPlugs <- bwTime %>%
 
 
 bwPlugs$avgPlug <- bwPlugs$dryWeight/5
+meanPlug <- mean(bwPlugs$avgPlug)
 
 #might need to multiply every genotype by n and average plugs in trial to make this work -_-
 
@@ -184,45 +187,113 @@ bwPlugs$avgPlug <- bwPlugs$dryWeight/5
 ```{r, dryWeightCorrection, include = TRUE}
 
 
-bwClean$correctedDryWeight <- bwClean$dryWeight 
+# bwClean$correctedDryWeight <- bwClean$dryWeight 
 
-bwCleanFrags <- bwClean %>% 
+bwCleanFrags <- bwTime %>% 
   dplyr::filter(ID %in% "frag")
 
-bwCleanWild <- bwClean %>% 
+bwCleanWild <- bwTime %>% 
   dplyr::filter(ID %in% "wild")
 
-# bwcleanFrags$adjWeight <- bwCleanFrags$dryWeight - bwClean
+bwCleanWild$correctedDryWeight <- bwCleanWild$dryWeight - meanTiles
+
+bwCleanFrags$correctedDryWeight <- bwCleanFrags$dryWeight - meanPlug #THIS NEEDS TO BE MULTIPLIED BY N OF EACH RACK -__-n AND EACH TRIAL??
+
 
 ```
 
 
 
 
-## Now I want to separate our data set into our Fragments and our Wild colonies. Using the function `filter()` from the package `dplyr`.
+## Now I want to combine our data back to one data frame with the corrected dry weights of the frags vs wilds .
 
 ```{r, splittingData, include = TRUE}
 
 
-bwFrags <- bwClean %>% dplyr::filter(ID %in% "frag") %>% select(c("timePoint", "species", "geno", "trial", "ID", "dryWeight")) %>% group_by(timePoint, geno) #%>% summarise_at(vars(dryWeight), mean)
+bwClean <- rbind(bwCleanFrags, bwCleanWild)
 
-head(bwFrags)
+totalFrag <- bwClean %>%
+  select(timePoint, species, ID, geno, correctedDryWeight) %>%
+  dplyr::filter(ID %in% 'frag') %>%
+  dplyr::group_by(timePoint, species, ID, geno) %>%
+  dplyr::summarise(sum(correctedDryWeight)) %>% 
+  dplyr::rename("correctedDryWeight" = "sum(correctedDryWeight)")
+totalWhole <- bwClean %>% 
+  select(timePoint, species, ID, geno, correctedDryWeight) %>%
+  dplyr::filter(ID %in% 'wild') %>%
+  dplyr::group_by(timePoint, species, ID, geno)
 
-bwWild <- bwClean %>%  dplyr::filter(ID %in% "wild")
 
-head(bwWild)
+bwClean <- rbind(totalFrag, totalWhole)
 
 
+```
+
+# Checking for Normality
+***
+## I am checking to see if the data fits a normal distribution
+
+```{r, normalityCheck, include = TRUE}
+
+shapiro.test(bwClean$correctedDryWeight)
+hist(bwClean$correctedDryWeight)
 
 
 
 ```
+# Statistical Tests
+***
+## The data is not normally distributed and transformations failed to achieve normality. 
+```{r, stats, include = TRUE}
+
+
+totalLM <- lmer(correctedDryWeight ~ species*ID*timePoint + (1 | geno), bwClean)
+totalLManova <- anova(totalLM)
+totalLManova
+
+
+eta_sq(totalLM, partial = TRUE)
+r.squaredGLMM(totalLM)
+emmeans(totalLM, list(pairwise ~ timePoint*ID), adjust = 'bonferroni')
+
+
+changeLM <- lmer(percentChange ~ species*treatment*timepoint + (1 | id), totalChange)
+changeLManova <- anova(changeLM)
+changeLManova
+
+
+
+cleanFrag <- bwClean %>% 
+  filter(ID %in% "frag")
+
+cleanWhole <- bwClean %>% 
+  filter(ID %in% "wild")
+mean(totalFrag$correctedDryWeight)
+
+mean(cleanWhole$correctedDryWeight)
+
+
+```
+
+
+
 # Visualizing Data
 ***
-## I now want to visualize our data using the package `ggplot2`. 
+## I now want to visualize our data using the package `ggplot2`. But first I am going to subset the larger dataset to remove the blanks and plugs from the dataset. 
 
 
 ```{r, Graphs, include = TRUE}
+
+
+bwFinal <- bwClean %>% 
+  dplyr::filter(ID %in% c('frag', 'wild'))
+
+
+plot <- ggplot(bwFinal, aes(timePoint, correctedDryWeight))+
+  geom_point(aes(fill = 'black'), size = 2)+
+  # geom_line(aes(color = geno), size = 4)+
+  geom_bar(stat = 'identity', aes(fill = geno))+
+  facet_wrap(ID ~ geno )
 
 
 
