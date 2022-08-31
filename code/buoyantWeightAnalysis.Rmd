@@ -83,11 +83,11 @@ bw$geno <- paste0(bw$species, bw$genotype)
 bw$species <- as.factor(bw$species)
 
 bwBlanks <- bw %>% 
-  select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight") %>% 
+  select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight", "n") %>% 
   dplyr::filter(ID %in% c("plugs", "tile"))
   
 bwClean <- bw %>% 
-  select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight") %>% 
+  select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight", "n") %>% 
   dplyr::filter(species %in% c("pc", "ps", "dl"))
 
 bwClean <- rbind(bwClean, bwBlanks)

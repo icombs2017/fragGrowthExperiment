@@ -773,7 +773,7 @@ shapiro.test(totalSA$logSA)
 
 
 logTotalLM <- lmer(logSA ~ species*treatment*timepoint + (1 | id), totalSA)
-logTotalLManova <- ranova(logTotalLM)
+logTotalLManova <- anova(logTotalLM)
 logTotalLManova
 
 
