@@ -118,7 +118,7 @@ head(bwClean)
 
 
 bwTime <- bwClean %>% 
-  dplyr::select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight") %>% 
+  dplyr::select("date", "timePoint", "species","geno", "trial", "ID", "dryWeight", "n") %>% 
   dplyr::filter(timePoint %in% c("0", "3", "6"))
 
 
@@ -137,7 +137,7 @@ bwTime <- bwClean %>%
 
 
 bwTiles <- bwTime %>% 
-  select("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight") %>% 
+  select("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight", "n") %>% 
   dplyr::filter(ID %in% "tile")
 
 
@@ -162,7 +162,7 @@ meanTiles <- mean(bwTiles$dryWeight)
 
 
 bwPlugs <- bwTime %>% 
-  select("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight") %>% 
+  select("date", "timePoint", "species", "geno", "trial", "ID", "dryWeight", "n") %>% 
   dplyr::filter(ID %in% "plugs")
 
 
@@ -170,7 +170,7 @@ bwPlugs <- bwTime %>%
 
 
 
-bwPlugs$avgPlug <- bwPlugs$dryWeight/5
+bwPlugs$avgPlug <- bwPlugs$dryWeight/bwPlugs$n
 meanPlug <- mean(bwPlugs$avgPlug)
 
 #might need to multiply every genotype by n and average plugs in trial to make this work -_-
@@ -181,23 +181,27 @@ meanPlug <- mean(bwPlugs$avgPlug)
 ```
 
 
-### Now we are going to correct our weights by removing the weight of the plugs and the tiles from the frags and whole colonies, respectively. 
+### Now we are going to correct our weights by removing the weight of the plugs and the tiles from the frags and whole colonies, respectively. First, we need to multiply the weight of the plug by the n of each rack. E.g. If a rack has 26 plugs on it we need to multiply our `meanPlug` number by 26 to account for that rack. Then we will subtract that from our dryWeigh. Similarly, we are taking the average of our blank tile weight (`meanTiles`) and subtracting that from our whole colonies. 
 
 
 ```{r, dryWeightCorrection, include = TRUE}
 
 
-# bwClean$correctedDryWeight <- bwClean$dryWeight 
-
 bwCleanFrags <- bwTime %>% 
   dplyr::filter(ID %in% "frag")
+
+meanPlug <- rep(meanPlug, length(bwCleanFrags$n))
+bwCleanFrags <- cbind(bwCleanFrags, as.tibble(meanPlug))
+bwCleanFrags$correctionFactor <- bwCleanFrags$n * bwCleanFrags$value
+
+bwCleanFrags$correctedDryWeight <- bwCleanFrags$dryWeight - bwCleanFrags$correctionFactor
+
 
 bwCleanWild <- bwTime %>% 
   dplyr::filter(ID %in% "wild")
 
 bwCleanWild$correctedDryWeight <- bwCleanWild$dryWeight - meanTiles
 
-bwCleanFrags$correctedDryWeight <- bwCleanFrags$dryWeight - meanPlug #THIS NEEDS TO BE MULTIPLIED BY N OF EACH RACK -__-n AND EACH TRIAL??
 
 
 ```
@@ -209,25 +213,55 @@ bwCleanFrags$correctedDryWeight <- bwCleanFrags$dryWeight - meanPlug #THIS NEEDS
 
 ```{r, splittingData, include = TRUE}
 
+bwCleanFrags <- bwCleanFrags %>% 
+  select(date, timePoint, species, geno, trial, ID, dryWeight, n, correctedDryWeight)
+bwClean1 <- rbind(bwCleanFrags, bwCleanWild)
 
-bwClean <- rbind(bwCleanFrags, bwCleanWild)
-
-totalFrag <- bwClean %>%
-  select(timePoint, species, ID, geno, correctedDryWeight) %>%
+totalFrag <- bwClean1 %>%
+  select(timePoint, species, ID, geno,trial, correctedDryWeight) %>%
   dplyr::filter(ID %in% 'frag') %>%
-  dplyr::group_by(timePoint, species, ID, geno) %>%
+  dplyr::group_by(timePoint, geno, species, ID) %>%
   dplyr::summarise(sum(correctedDryWeight)) %>% 
-  dplyr::rename("correctedDryWeight" = "sum(correctedDryWeight)")
-totalWhole <- bwClean %>% 
-  select(timePoint, species, ID, geno, correctedDryWeight) %>%
-  dplyr::filter(ID %in% 'wild') %>%
-  dplyr::group_by(timePoint, species, ID, geno)
+  dplyr::rename("correctedDryWeight" = "sum(correctedDryWeight)") %>% 
+  ungroup()
+totalWhole <- bwClean1 %>% 
+  select(timePoint, species, ID, geno,correctedDryWeight) %>%
+  dplyr::filter(ID %in% 'wild')
 
 
 bwClean <- rbind(totalFrag, totalWhole)
 
 
 ```
+
+# Calculating Percent Change
+***
+Because the wilds and frags started with wildly different amounts of skeleton we want to calculate rate of change to try and normalize the data, but to also investigate which treatment is producing more skeleton. 
+
+```{r, percentChange, include = TRUE}
+
+
+bwCleanFrag <- bwClean %>% 
+  dplyr::filter(ID %in% "frag")
+bwCleanFrag <-
+
+
+
+pcsaChange$difference <- (pcsaChange$finalSurfaceArea-pcsaChange$initialSurfaceArea)
+pcsaChange$percentChange <- ((pcsaChange$finalSurfaceArea-pcsaChange$initialSurfaceArea)/pcsaChange$initialSurfaceArea)*100
+
+
+
+
+
+
+```
+
+
+
+
+
+
 
 # Checking for Normality
 ***
