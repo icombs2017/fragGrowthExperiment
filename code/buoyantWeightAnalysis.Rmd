@@ -191,7 +191,7 @@ bwCleanFrags <- bwTime %>%
   dplyr::filter(ID %in% "frag")
 
 meanPlug <- rep(meanPlug, length(bwCleanFrags$n))
-bwCleanFrags <- cbind(bwCleanFrags, as.tibble(meanPlug))
+bwCleanFrags <- cbind(bwCleanFrags, as_tibble(meanPlug))
 bwCleanFrags$correctionFactor <- bwCleanFrags$n * bwCleanFrags$value
 
 bwCleanFrags$correctedDryWeight <- bwCleanFrags$dryWeight - bwCleanFrags$correctionFactor
@@ -240,25 +240,38 @@ Because the wilds and frags started with wildly different amounts of skeleton we
 
 ```{r, percentChange, include = TRUE}
 
-
-bwCleanFrag <- bwClean %>% 
-  dplyr::filter(ID %in% "frag")
-bwCleanFrag <-
+bwChange <- dcast(bwClean, geno+species+ID~timePoint) 
 
 
+bwChange$`T3-T0` <- ((bwChange$`3`-bwChange$`0`)/bwChange$`0`)*100
+bwChange$`T6-T3` <- ((bwChange$`6`-bwChange$`3`)/bwChange$`3`)*100
+bwChange$`T6-T0` <- ((bwChange$`6`-bwChange$`0`)/bwChange$`0`)*100
 
-pcsaChange$difference <- (pcsaChange$finalSurfaceArea-pcsaChange$initialSurfaceArea)
-pcsaChange$percentChange <- ((pcsaChange$finalSurfaceArea-pcsaChange$initialSurfaceArea)/pcsaChange$initialSurfaceArea)*100
+bwChange1 <- bwChange %>% 
+            select(geno, species, ID, `0`, `3`, `6`)
+bwChange2 <- bwChange %>% 
+            select(geno, species, ID, `T3-T0`, `T6-T3`, `T6-T0`)
+
+bwChangeMelt1 <- melt(bwChange1, id = c(1,2,3))
+bwChangeMelt1 <- bwChangeMelt1 %>% 
+                dplyr::rename("timePoint" = "variable") %>% 
+                dplyr::rename("correctedDryWeight" = "value")    
+
+bwChangeMelt2 <- melt(bwChange2, id = c(1,2,3))
+bwChangeMelt2 <- bwChangeMelt2 %>% 
+                dplyr::rename("timeSeries" = "variable") %>% 
+                dplyr::rename("percentChange" = "value")    
+
+bwChange <- dplyr::left_join(bwChangeMelt1, bwChangeMelt2, by = c("geno", "species", "ID")) %>% 
+  select(geno, species, ID, timeSeries, percentChange)
+bwChange$timeSeries <- as.factor(bwChange$timeSeries)
 
 
-
-
+bwChange <- bwChange %>% 
+        filter(timeSeries != "T6-T0")
 
 
 ```
-
-
-
 
 
 
@@ -273,6 +286,8 @@ shapiro.test(bwClean$correctedDryWeight)
 hist(bwClean$correctedDryWeight)
 
 
+shapiro.test(bwChange$percentChange)
+hist(bwChange$percentChange)
 
 ```
 # Statistical Tests
