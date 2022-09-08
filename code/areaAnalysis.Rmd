@@ -59,7 +59,56 @@ pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "strin
 ## We are downloading this dataset from our GoogleDrive folder. We will be using the package `googledrive`. Each GoogleDrive file has a unique ID that does not change throughout the lifespan of the document, even if the file name is changed. This ID is housed in the file's URL. 
 Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Below you will copy and paste that into the function `drive_download` within `as_id`. This will save the file locally in the specified path (in this case our data folder) and you will import the folder as you normally would. Downloading it this way decreases the potential human error when downloading, moving folders, renaming, saving etc and ensures that the most up to date file is being utilized. 
 
-# Here we are loading the whole data set from the Google Drive
+# Here we are importing data for D. lab from google drive
+
+```{r, dlLoadingData, include = TRUE}
+
+# 
+# # drive_download(
+# #   as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
+# #   path = "../data/saDatasetDL.xlsx", 
+# #   overwrite = TRUE)
+# 
+# dlsa <- read_excel("../data/saDatasetDL.xlsx", sheet = 3)
+# 
+# dlsa
+
+
+```
+#Here we are importing data for P. cli from google drive
+
+```{r, pcLoadingData, include = TRUE}
+
+# 
+# drive_download(
+#   as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
+#   path = "../data/saDatasetPC.xlsx", 
+#   overwrite = TRUE)
+# 
+# pcsa <- read_excel("../data/saDatasetPC.xlsx", sheet = 4)
+# 
+# pcsa
+
+
+```
+
+#Here we are importing data for P. str from google drive
+
+```{r, psLoadingData, include = TRUE}
+
+
+# drive_download(
+#   as_id("1C1deEPnb07YcvbEngx_OV3Xl-C740sBefoaum154OyY"),
+#   path = "../data/saDatasetPS.xlsx", 
+#   overwrite = TRUE)
+# 
+# pssa <- read_excel("../data/saDatasetPS.xlsx", sheet = 5)
+# 
+# pssa
+
+
+```
+
 
 ```{r, totalLoadingData, include = TRUE}
 
@@ -79,6 +128,87 @@ total
 
 ## Now I am just tidying up my dataset, I am combining two columns, **species** and **genotype** into a column **geno** using the `paste0` function, cleaning up the raw dataset to only include my species of concern using multiple functions from the package `dplyr`, and changing the class of some variables to factors using the function `as.factor()` for easier manipulation down the road.
 
+
+
+```{r, dlDataManipulation, include = TRUE}
+
+
+# dlsaClean <- dlsa %>% 
+#   select("timepoint", "species", "genotype","id","trial","treatment","SA")
+# 
+# 
+# 
+# 
+# dlsaClean$timepoint <- as.factor(dlsaClean$timepoint)
+# 
+# dlsaClean$species <- as.factor(dlsaClean$species)
+# 
+# dlsaClean$id <- as.factor(dlsaClean$id)
+# 
+# dlsaClean$trial <- as.factor(dlsaClean$trial)
+# 
+# dlsaClean$treatment <- as.factor(dlsaClean$treatment)
+# 
+# 
+# 
+# head(dlsaClean)
+# 
+
+
+```
+```{r, pcDataManipulation, include = TRUE}
+
+
+# pcsaClean <- pcsa %>% 
+#   select("timepoint", "species", "genotype","id","trial","treatment","SA")
+# 
+# 
+# 
+# 
+# pcsaClean$timepoint <- as.factor(pcsaClean$timepoint)
+# 
+# pcsaClean$species <- as.factor(pcsaClean$species)
+# 
+# pcsaClean$id <- as.factor(pcsaClean$id)
+# 
+# pcsaClean$trial <- as.factor(pcsaClean$trial)
+# 
+# pcsaClean$treatment <- as.factor(pcsaClean$treatment)
+# 
+# 
+# 
+# head(pcsaClean)
+
+
+
+```
+
+```{r, dataManipulation, include = TRUE}
+
+
+# pssaClean <- pssa %>% 
+#   select("timepoint", "species", "genotype","id","trial","treatment","SA")
+# 
+# 
+# 
+# 
+# pssaClean$timepoint <- as.factor(pssaClean$timepoint)
+# 
+# pssaClean$species <- as.factor(pssaClean$species)
+# 
+# pssaClean$id <- as.factor(pssaClean$id)
+# 
+# pssaClean$trial <- as.factor(pssaClean$trial)
+# 
+# pssaClean$treatment <- as.factor(pssaClean$treatment)
+# 
+# 
+# 
+# head(pssaClean)
+
+
+
+```
 
 ```{r, totalClean, include = TRUE}
 
@@ -113,6 +243,114 @@ totalClean$treatment <- as.factor(totalClean$treatment)
 
 ### Here we are breaking the data apart into frags and wilds for dl, pc, and ps, combinging the frags from each trial, putting the data back together, and then calculating percent change of surface area between the first and last timepoint. We are using a number of functions from the package `dplyr` as well as the function `dcast()` to recombine data from the package `reshape2`
 
+```{r, dlCalculatingPercentChange, include = TRUE }
+
+
+# dlsaFrag <- dlsaClean %>%
+#   select(timepoint, species, id, treatment, SA) %>%
+#   dplyr::filter(treatment %in% 'frag') %>%
+#   dplyr::group_by(timepoint, species, id, treatment) %>%
+#   dplyr::summarise(sum(SA)) %>% 
+#   dplyr::rename("SA" = "sum(SA)")
+# 
+# 
+# dlsaWild <- dlsaClean %>%
+#   dplyr::filter(treatment %in% 'wild') %>%
+#   select(timepoint, species, id, treatment, SA)
+# 
+# 
+# dlsaCombo <- bind_rows(dlsaFrag,dlsaWild)
+# 
+# dlsaFinal <- dlsaCombo %>%
+#   dplyr::filter(timepoint %in% c("T0","T3","T6")) %>%
+#   select(c('timepoint','species','id','treatment', "SA"))
+# 
+# 
+# 
+# dlsaChange <- dcast(dlsaFinal, id+treatment~timepoint) 
+# 
+# 
+# dlsaChange <- dplyr::rename(dlsaChange, "initialSurfaceArea" = "T0", "finalSurfaceArea" = "T6")
+# dlsaChange
+# dlsaChange$difference <- (dlsaChange$finalSurfaceArea-dlsaChange$initialSurfaceArea)
+# dlsaChange$percentChange <- ((dlsaChange$finalSurfaceArea-dlsaChange$initialSurfaceArea)/dlsaChange$initialSurfaceArea)*100
+# 
+#  
+
+```
+```{r, pcCalculatingPercentChange, include = TRUE }
+
+
+# pcsaFrag <- pcsaClean %>%
+#   select(timepoint, species, id, treatment, SA) %>%
+#   dplyr::filter(treatment %in% 'frag') %>%
+#   dplyr::group_by(timepoint, species, id, treatment) %>%
+#   dplyr::summarise(sum(SA)) %>% 
+#   dplyr::rename("SA" = "sum(SA)")
+# 
+# 
+# pcsaWild <- pcsaClean %>%
+#   dplyr::filter(treatment %in% 'wild') %>%
+#   select(timepoint, species, id, treatment, SA)
+# 
+# 
+# pcsaCombo <- bind_rows(pcsaFrag,pcsaWild)
+# 
+# pcsaFinal <- pcsaCombo %>%
+#   dplyr::filter(timepoint %in% c("T0","T3","T6")) %>%
+#   select(c('timepoint','species','id','treatment', "SA"))
+# 
+# 
+# 
+# pcsaChange <- dcast(pcsaFinal, id+treatment~timepoint) 
+# 
+# 
+# pcsaChange <- dplyr::rename(pcsaChange, "initialSurfaceArea" = "T0", "finalSurfaceArea" = "T6")
+# pcsaChange
+# pcsaChange$difference <- (pcsaChange$finalSurfaceArea-pcsaChange$initialSurfaceArea)
+# pcsaChange$percentChange <- ((pcsaChange$finalSurfaceArea-pcsaChange$initialSurfaceArea)/pcsaChange$initialSurfaceArea)*100
+# 
+#  
+
+```
+
+```{r, psCalculatingPercentChange, include = TRUE }
+
+
+# pssaFrag <- pssaClean %>%
+#   select(timepoint, species, id, treatment, SA) %>%
+#   dplyr::filter(treatment %in% 'frag') %>%
+#   dplyr::group_by(timepoint, species, id, treatment) %>%
+#   dplyr::summarise(sum(SA)) %>% 
+#   dplyr::rename("SA" = "sum(SA)")
+# 
+# 
+# pssaWild <- pssaClean %>%
+#   dplyr::filter(treatment %in% 'wild') %>%
+#   select(timepoint, species, id, treatment, SA)
+# 
+# 
+# pssaCombo <- bind_rows(pssaFrag,pssaWild)
+# 
+# pssaFinal <- pssaCombo %>%
+#   dplyr::filter(timepoint %in% c("T0","T3","T6")) %>%
+#   select(c('timepoint','species','id','treatment', "SA"))
+# 
+# 
+# 
+# pssaChange <- dcast(pssaFinal, id+treatment~timepoint) 
+# 
+# 
+# pssaChange <- dplyr::rename(pssaChange, "initialSurfaceArea" = "T0", "finalSurfaceArea" = "T6")
+# pssaChange
+# pssaChange$difference <- (pssaChange$finalSurfaceArea-pssaChange$initialSurfaceArea)
+# pssaChange$percentChange <- ((pssaChange$finalSurfaceArea-pssaChange$initialSurfaceArea)/pssaChange$initialSurfaceArea)*100
+# 
+#  
+
+```
+
+
 
 ```{r, totalPercentChange, include = TRUE }
 
@@ -136,26 +374,15 @@ totalFinal <- totalCombo %>%
 
 
 
-totalChange <- dcast(totalFinal, id+species+treatment~timepoint) 
+totalChange <- dcast(totalFinal, id+treatment~timepoint) 
 
 
-totalChange$`T3-T0` <- ((totalChange$T3-totalChange$T0)/totalChange$T0)*100
-totalChange$`T6-T3` <- ((totalChange$T6 -totalChange$T3)/totalChange$T3)*100
-totalChange$`T6-T0` <- ((totalChange$T6-totalChange$T0)/totalChange$T0)*100
+totalChange <- dplyr::rename(totalChange, "initialSurfaceArea" = "T0", "finalSurfaceArea" = "T6")
+totalChange
+totalChange$difference <- (totalChange$finalSurfaceArea-totalChange$initialSurfaceArea)
+totalChange$percentChange <- ((totalChange$finalSurfaceArea-totalChange$initialSurfaceArea)/totalChange$initialSurfaceArea)*100
 
-totalChange <- totalChange %>% 
-  select("id", "species","treatment", "T3-T0","T6-T3")
-
-totalChangeMelt <- melt(totalChange, id = c(1,2,3))
-
-totalChangeMelt <- totalChangeMelt %>% 
-  dplyr::rename("timeSeries" = "variable") %>% 
-  dplyr::rename("percentChange" = "value")
-totalChange <- totalChangeMelt   
-
-totalChange$timeSeries <- as.factor(totalChange$timeSeries)
-
-
+ 
 
 ```
 
@@ -434,51 +661,105 @@ pssaTest <- left_join(pssaFragTest, pssaWildTest, by = c("id"), copy = FALSE) %>
   dplyr::rename(pswildpercentChange = percentChange.y)
 ```
 
+# Combining Data
+***
+## We are going to combine all of the data we've parsed out above into two larger data frames. One for the raw surface area numbers `totalSA` and the other for the percent change data `totalChange`. The latter of which requires a bit more intensive data manipulation because we are calculating percent change of two different timepoints, and combining those data. All of this is done using `dplyr` and `reshape2`.
 
+```{r, combiningData, include = TRUE}
+# Combining the smaller data sets above into two larger data sets 
+totalSA <- bind_rows(dlsaFinal, pcsaFinal, pssaFinal)
+totalClean <- bind_rows(dlsaClean, pcsaClean, pssaClean)
+
+# Now we need to take totalClean and calculate percent change from our two time points.
+# But first we need to separate them out into frags and wilds
+
+# Separating into Frags because we need to add up the trials
+totalFrag <- totalClean %>%
+  select(timepoint, species, id, treatment, SA) %>%
+  dplyr::filter(treatment %in% 'frag') %>%
+  dplyr::group_by(timepoint, species, id, treatment) %>%
+  dplyr::summarise(sum(SA)) %>% 
+  dplyr::rename("SA" = "sum(SA)")
+
+# Separating into wilds 
+totalWild <- totalClean %>%
+  dplyr::filter(treatment %in% 'wild') %>%
+  select(timepoint, species, id, treatment, SA)
+
+# Combining the two back together
+totalCombo <- bind_rows(totalFrag,totalWild)
+
+# Now we are separating out each bracket of time points so we can calculate Percent change from T0 to T3 and T0 to T6.
+
+totalT3 <- totalCombo %>%
+  dplyr::filter(timepoint %in% c("T0","T3")) %>%
+  select(c('timepoint','species','id','treatment', "SA"))
+
+totalT6 <- totalCombo %>%
+  dplyr::filter(timepoint %in% c("T0","T6")) %>%
+  select(c('timepoint','species','id','treatment', "SA"))
+
+# Going from long to wide so we can do the calculation
+totalChangeT3 <- dcast(totalT3,id+species+treatment~timepoint) 
+
+# Calculating Percent Change
+totalChangeT3 <- dplyr::rename(totalChangeT3, "initialSurfaceArea" = "T0", "T3SurfaceArea" = "T3")
+totalChangeT3
+totalChangeT3$difference <- (totalChangeT3$T3SurfaceArea-totalChangeT3$initialSurfaceArea)
+totalChangeT3$T3percentChange <- ((totalChangeT3$T3SurfaceArea-totalChangeT3$initialSurfaceArea)/totalChangeT3$initialSurfaceArea)*100
+
+# Going from long to wide so we can do the calculation
+totalChangeT6 <- dcast(totalT6, id+species+treatment~timepoint) 
+
+# Calculating Percent Change
+totalChangeT6 <- dplyr::rename(totalChangeT6, "initialSurfaceArea" = "T0", "finalSurfaceArea" = "T6")
+totalChangeT6
+totalChangeT6$difference <- (totalChangeT6$finalSurfaceArea-totalChangeT6$initialSurfaceArea)
+totalChangeT6$T6percentChange <- ((totalChangeT6$finalSurfaceArea-totalChangeT6$initialSurfaceArea)/totalChangeT6$initialSurfaceArea)*100
+
+# combining the two datasets again 
+totalChange <- bind_rows(totalChangeT3, totalChangeT6)
+
+# Selecting so we can melt the data back from wide to long again
+totalChange <- totalChange %>% 
+  dplyr::select(id,species, treatment,T3percentChange,T6percentChange)
+totalChangeMelt1 <- melt(totalChange, id = c(1,2,3))
+
+# Cleaning up the data after melting it
+totalChangeMelt <- totalChangeMelt1 %>% 
+  na.omit() %>% 
+  tidyr::separate(variable, into = c("timepoint", "remove" ), sep = 2) %>% 
+  dplyr::rename("percentChange" = "value") %>% 
+  dplyr::select(id,species, treatment,timepoint,percentChange)
+
+# Renaming the dataframe 
+totalChange <- totalChangeMelt
+
+
+```
 
 # Normality testing and Data Transformation
 ***
 ## Here we are testing for normality of the raw SA data, and if not normally distributed, we are transforming the data to see if that will fit a normal distribution.
 
 ```{r, normalityTesting, include = TRUE}
+# totalPerm <- adonis(formula = SA ~ treatment*timepoint*species, data = totalSA, method = "euclidian", permutations = 9999 )
 
 #Testing normality of totalSA and totalChangeSA
 
-hist(totalFinal$SA)
+hist(totalSA$SA)
 
-shapiro.test(totalFinal$SA)
-
-#Significant so Data does not fit normal distribution
-#log transform data
-
-totalFinal$logSA <- log(totalFinal$SA)
-
-#Re-testing normality
-hist(totalFinal$logSA)
-
-shapiro.test(totalFinal$logSA)
-
-
-
-
-#Testing normality of totalChangeSA
-
-hist(totalChange$percentChange)
-
-shapiro.test(totalChange$percentChange)
+shapiro.test(totalSA$SA)
 
 #Significant so Data does not fit normal distribution
 #log transform data
 
-totalChange$logPercentChange <- log(totalChange$percentChange)
+totalSA$logSA <- log(totalSA$SA)
 
 #Re-testing normality
-hist(totalChange$logPercentChange)
+hist(totalSA$logSA)
 
-shapiro.test(totalChange$logPercentChange)
-
-
-
+shapiro.test(totalSA$logSA)
 
 
 
@@ -491,7 +772,7 @@ shapiro.test(totalChange$logPercentChange)
 ```{r, repeatedMeasures, include = TRUE}
 
 
-logTotalLM <- lmer(logSA ~ species*treatment*timepoint + (1 | id), totalFinal)
+logTotalLM <- lmer(logSA ~ species*treatment*timepoint + (1 | id), totalSA)
 logTotalLManova <- anova(logTotalLM)
 logTotalLManova
 
@@ -501,19 +782,9 @@ r.squaredGLMM(logTotalLM)
 emmeans(logTotalLM, list(pairwise ~ timepoint), adjust = 'bonferroni')
 
 
-changeLM <- lmer(percentChange ~ species*treatment*timeSeries + (1 | id), totalChange)
+changeLM <- lmer(percentChange ~ species*treatment*timepoint + (1 | id), totalChange)
 changeLManova <- anova(changeLM)
 changeLManova
-
-emmeans(changeLManova, list(pairwise ~ timeSeries), adjust = 'bonferroni')
-
-kruskal.test(percentChange ~ species*treatment*timeSeries, data = totalChange)
-kruskal.test(percentChange~species, data = totalChange)
-kruskal.test(percentChange~treatment, data = totalChange)
-kruskal.test(percentChange ~ timeSeries, data = totalChange)
-
-changePerm <- adonis2(totalChange$percentChange ~ species*treatment*timeSeries, data = totalChange, method = "euclidian", permutations = 9999, na.rm = TRUE)
-
 
 
 

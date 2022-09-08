@@ -44,7 +44,7 @@ For the following analyses we will require the use of a number of different R pa
 
 ```{r,packages, include = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork","reshape2", "lme4", "lmerTest")
+pacman::p_load("ggplot2", "googlesheets4", "dplyr", "officer","reshape2", "stringr", "dplyr", "flextable", "gridExtra", "ggpubr", "Rmisc", "rcompanion", "RColorBrewer", "vegan", "googledrive", "gdata", "readxl", "DescTools","patchwork","reshape2", "lme4", "emmeans", "MuMIn", "sjstats", "lmerTest")
 
 
 
@@ -173,7 +173,6 @@ bwPlugs <- bwTime %>%
 bwPlugs$avgPlug <- bwPlugs$dryWeight/bwPlugs$n
 meanPlug <- mean(bwPlugs$avgPlug)
 
-#might need to multiply every genotype by n and average plugs in trial to make this work -_-
 
 
 
@@ -209,7 +208,7 @@ bwCleanWild$correctedDryWeight <- bwCleanWild$dryWeight - meanTiles
 
 
 
-## Now I want to combine our data back to one data frame with the corrected dry weights of the frags vs wilds .
+## Now I want to combine our data back to one data frame with the corrected dry weights of the frags vs wilds.
 
 ```{r, splittingData, include = TRUE}
 
@@ -236,7 +235,7 @@ bwClean <- rbind(totalFrag, totalWhole)
 
 # Calculating Percent Change
 ***
-Because the wilds and frags started with wildly different amounts of skeleton we want to calculate rate of change to try and normalize the data, but to also investigate which treatment is producing more skeleton. 
+Because the wilds and frags started with wildly different amounts of skeleton we want to calculate rate of change to try not only to normalize the data, but also to investigate which treatment is producing more skeleton. 
 
 ```{r, percentChange, include = TRUE}
 
@@ -247,23 +246,24 @@ bwChange$`T3-T0` <- ((bwChange$`3`-bwChange$`0`)/bwChange$`0`)*100
 bwChange$`T6-T3` <- ((bwChange$`6`-bwChange$`3`)/bwChange$`3`)*100
 bwChange$`T6-T0` <- ((bwChange$`6`-bwChange$`0`)/bwChange$`0`)*100
 
-bwChange1 <- bwChange %>% 
-            select(geno, species, ID, `0`, `3`, `6`)
+# bwChange1 <- bwChange %>% 
+#             select(geno, species, ID, `0`, `3`, `6`)
 bwChange2 <- bwChange %>% 
             select(geno, species, ID, `T3-T0`, `T6-T3`, `T6-T0`)
 
-bwChangeMelt1 <- melt(bwChange1, id = c(1,2,3))
-bwChangeMelt1 <- bwChangeMelt1 %>% 
-                dplyr::rename("timePoint" = "variable") %>% 
-                dplyr::rename("correctedDryWeight" = "value")    
+# bwChangeMelt1 <- melt(bwChange1, id = c(1,2,3))
+# bwChangeMelt1 <- bwChangeMelt1 %>% 
+#                 dplyr::rename("timePoint" = "variable") %>% 
+#                 dplyr::rename("correctedDryWeight" = "value")    
 
 bwChangeMelt2 <- melt(bwChange2, id = c(1,2,3))
 bwChangeMelt2 <- bwChangeMelt2 %>% 
                 dplyr::rename("timeSeries" = "variable") %>% 
                 dplyr::rename("percentChange" = "value")    
 
-bwChange <- dplyr::left_join(bwChangeMelt1, bwChangeMelt2, by = c("geno", "species", "ID")) %>% 
-  select(geno, species, ID, timeSeries, percentChange)
+bwChange <- bwChangeMelt2
+# bwChange <- dplyr::left_join(bwChangeMelt1, bwChangeMelt2, by = c("geno", "species", "ID","timePoint")) %>% 
+#   select(geno, species, ID, timeSeries, percentChange)
 bwChange$timeSeries <- as.factor(bwChange$timeSeries)
 
 
@@ -306,11 +306,14 @@ r.squaredGLMM(totalLM)
 emmeans(totalLM, list(pairwise ~ timePoint*ID), adjust = 'bonferroni')
 
 
-changeLM <- lmer(percentChange ~ species*treatment*timepoint + (1 | id), totalChange)
+changeLM <- lmer(percentChange ~ ID*species*timeSeries + (1 | geno), bwChange)
 changeLManova <- anova(changeLM)
 changeLManova
 
 
+eta_sq(changeLM, partial = TRUE)
+r.squaredGLMM(changeLM)
+emmeans(changeLM, list(pairwise ~ ID*timeSeries), adjust = 'bonferroni')
 
 cleanFrag <- bwClean %>% 
   filter(ID %in% "frag")
