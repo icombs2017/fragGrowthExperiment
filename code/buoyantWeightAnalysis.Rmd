@@ -61,10 +61,10 @@ Example: docs.google.com/spreadsheets/d/FILE_ID_GOES_HERE/other_information/. Be
 
 ```{r, loadingData, include = TRUE}
 
-drive_download(
-as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
-path = "../data/bwDataset.xlsx",
-overwrite = TRUE)
+# drive_download(
+# as_id("1IK7_sd_BBPcuxHgUC8sfFOp1oqGOb0fE"),
+# path = "../data/bwDataset.xlsx",
+# overwrite = TRUE)
 
 bw <- read_excel("../data/bwDataset.xlsx")
 bw
@@ -268,7 +268,7 @@ bwChange$timeSeries <- as.factor(bwChange$timeSeries)
 
 
 bwChange <- bwChange %>% 
-        filter(timeSeries != "T6-T0")
+        filter(timeSeries == "T6-T0")
 
 
 ```
@@ -303,10 +303,12 @@ totalLManova
 
 eta_sq(totalLM, partial = TRUE)
 r.squaredGLMM(totalLM)
+
+#timePoint, and the interaction between species:ID are significant 
+emmeans(totalLM, list(pairwise ~ timePoint*ID), adjust = 'bonferroni')
 emmeans(totalLM, list(pairwise ~ timePoint*ID), adjust = 'bonferroni')
 
-
-changeLM <- lmer(percentChange ~ ID*species*timeSeries + (1 | geno), bwChange)
+changeLM <- lmer(percentChange ~ species*ID*timeSeries + (1 | geno), bwChange)
 changeLManova <- anova(changeLM)
 changeLManova
 
@@ -325,6 +327,14 @@ mean(totalFrag$correctedDryWeight)
 mean(cleanWhole$correctedDryWeight)
 
 
+cleanChangeFrag <- bwChange %>% 
+  filter(ID %in% "frag")
+cleanChangeWhole <- bwChange %>% 
+  filter(ID %in% "wild")
+mean(cleanChangeFrag$percentChange)
+mean(cleanChangeWhole$percentChange)
+
+
 ```
 
 
@@ -334,414 +344,98 @@ mean(cleanWhole$correctedDryWeight)
 ## I now want to visualize our data using the package `ggplot2`. But first I am going to subset the larger dataset to remove the blanks and plugs from the dataset. 
 
 
-```{r, Graphs, include = TRUE}
+```{r, meanPercentChangeVisualization, include = TRUE}
+# could do confidence interval 
+
+se <- function(x) sqrt(var(x) / length(x))
+
+totalBWse <- bwClean %>%
+  dplyr::select(timePoint, geno, species, ID, correctedDryWeight) %>% 
+  dplyr::group_by(timePoint, species, ID) %>% 
+  dplyr::summarise(
+    meanBW = mean(correctedDryWeight),
+    sd = sd(correctedDryWeight),
+    n = n(),
+    se = sd/sqrt(n))
+
+totalChangeSe <- bwChange %>% 
+  dplyr::select(timeSeries, geno, species, ID, percentChange) %>% 
+  dplyr::group_by(timeSeries, species, ID) %>% 
+  dplyr::summarise(
+    meanPC = mean(percentChange),
+    sd = sd(percentChange),
+    n = n(),
+    se = sd/sqrt(n))
 
 
-bwFinal <- bwClean %>% 
-  dplyr::filter(ID %in% c('frag', 'wild'))
+bwPercentChange.1 <- ggplot(totalChangeSe, aes(x = ID, y = meanPC, fill = timeSeries)) +
+  geom_bar(stat = "identity", position = position_dodge())+
+  facet_wrap(~species)+
+    ggtitle("Buoyant Weight Percent Growth of D. labyrinthiformis, P. strigosa, and P. clivosa") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c( "#EAA65D","#0D3B66"))+    
+    xlab("Treatment") + ylab("Percent Change (%)")+
+  geom_errorbar( aes(x=ID, ymin=meanPC-se, ymax=meanPC+se), position = position_dodge()) +
+   # ylim(0,100)+    
+    xlab("Treatment") + ylab("Percent Change (%)")
+bwPercentChange.1
 
+bwPercentChange<- bwPercentChange.1 + theme(
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+  panel.background = element_rect(fill = '#F5F5F5'),
+  plot.title = element_blank(), 
+  axis.line = element_line(colour = "black"), 
+  axis.ticks = element_line(color="black"), 
+  text = element_text(size = 35, color="black"), 
+  axis.text.x=element_text(size = 31, color="black"), 
+  axis.text.y=element_text(size = 31, color="black"),
+  legend.position = "right")
 
-plot <- ggplot(bwFinal, aes(timePoint, correctedDryWeight))+
-  geom_point(aes(fill = 'black'), size = 2)+
-  # geom_line(aes(color = geno), size = 4)+
-  geom_bar(stat = 'identity', aes(fill = geno))+
-  facet_wrap(ID ~ geno )
+bwPercentChange
 
-
-
-
-
-bwWildPlot <- ggplot(bwWild, aes(timePoint, dryWeight))+
-                      geom_point(aes(fill = "black"))+
-                      geom_line(aes(color = geno))+
-                      #geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(geno~species)+
-                      ylim(0,2000)
-  
-bwWildPlot
-ggsave("../figures/wild.png", plot = bwWildPlot, height = 5, width = 9, units = 'in',dpi = 600)
-
-
-bwFragPlot <- ggplot(bwFrags, aes(timePoint, dryWeight))+
-                      geom_point(aes(fill = "black"))+
-                      geom_line(aes(color = geno))+
-                      #geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(trial~geno)+
-                      ylim(0,400)
-  bwFragPlot
- ggsave("../figures/frags.png", plot = bwFragPlot, height = 5, width = 9, units = 'in',dpi = 600)
- 
- 
- 
-```
-
-```{r, testGraph, include = TRUE, }
-
-bwTESTPlot <- ggplot(bwWild, aes(timePoint, dryWeight))+
-                      geom_point(aes(fill = "black"))+
-                      geom_line(aes(color = geno))+
-                      #geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(geno~species)+
-                      ylim(0,2000)
-  
-```
-
-# Looking at percent change between the first and last timepoints
-***
-## I now want to just expolore how much things changed between the first and last (so far) timepoint of our experiment. Here we will be using `filter()` function from the package `dplyr` to filter our data set to just use the first and last timepoint of buoyant weight measuremnents. We are checking to ensure we have all of our cases by using the function `length()` of an arbitary column in our new dataframe. 
-
-
-
-```{r, firstAndLastTimepoint, include = TRUE}
-
-bwFinal <- bwClean %>% 
-  dplyr::filter(timePoint %in% c("1","4")) %>%
-  select(c('timePoint','species','geno','trial','ID','dryWeight'))
-
-
-length(bwFinal$timePoint)
-
-bwChange <- dcast(bwFinal, species+geno+trial+ID~timePoint) 
-
-bwChange <- dplyr::rename(bwChange, "initialDryWeight" = "1", "finalDryWeight" = "4")
-bwChange
-
-bwChange$percentChange <- ((bwChange$finalDryWeight-bwChange$initialDryWeight)/bwChange$initialDryWeight)*100
-
-
-
-
-changePlot <- ggplot(bwChange, aes(x = geno, y = percentChange, fill = ID))+
-  geom_bar(stat = "identity")+
-  ylim(-100,100)+
-  facet_wrap(~ID)
-
-
-
-
-changeFrag <- bwChange %>% 
-  filter(ID %in% "frag")
-
-changeWild <- bwChange %>% 
-  filter(ID %in% "wild")
-
-changeFragPlot <- ggplot(changeFrag, aes(x = trial, y = percentChange, fill = geno))+
-  geom_bar(stat = 'identity', position = 'dodge')+
-  #facet_wrap(~geno)+
-  ylim(-100,300)+
-  theme(
-    axis.text.x = element_text(angle = 45)
-  )
-
-
-
-
-
-
-
-changeWildPlot <- ggplot(changeWild, aes(x = geno, y = percentChange))+
-  geom_bar(stat = 'identity', position = 'dodge')+
-  facet_wrap(geno~species)+
-  ylim(-100,300)
-
-
-
-changePlotAll <- changeFragPlot | changeWildPlot
-
-bwWild <- bwClean %>% dplyr::filter(ID %in% "wild")
-
-wildPlot <- ggplot(changeWild, aes(x = percentChange, y = geno, fill = trial))+
-  geom_bar(stat = 'identity')
-  
-
-
-
-
+ggsave("../figures/bwPercentChange.png", plot = bwPercentChange, height = 15, width = 20, units = 'in',dpi = 600)
 
 ```
 
+#Here we are creating a figure for the mean T0, T3, and T6 surface area of each species. Included in this figure are error bars derived from the standard deviation divided by the square root of the sample size (n)
+
+```{r, meanSAgrowthVisualization, include = TRUE}
 
 
-```{r}
-weirdOnes <- bwClean %>% dplyr::filter(ID %in% "wild")
 
-weirdPlot <- ggplot(weirdOnes, aes(x = timePoint, y = dryWeight, color = geno))+
-  geom_point(size = 2)+
-  geom_line()+
-  facet_wrap(trial~ geno)+
-  labs(title = "Wild Colonies")
+bwGrowth.1 <- ggplot(data=totalBWse, aes(x = ID, y = meanBW, fill = timePoint)) +
+  geom_bar(stat = "identity", position = position_dodge(), alpha = 0.75)+
+  geom_errorbar( aes(x=ID, ymin=meanBW-se, ymax=meanBW+se), position = position_dodge())+ 
+  facet_wrap(~species)+
+  scale_fill_hue(name="Time Point") +  
+  labs(x = "Treatment", y = bquote("BuoyantWeight (g)"),fill='Time Point') + 
+  ggtitle("Mean Skeletal Growth of D. labyrinthiformis, P. strigosa, and P. clivosa") +
+  scale_fill_discrete(labels=c('T0','T3','T6'))+
+  scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+
+  scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
 
-alsoWeird <- bwClean %>% dplyr::filter(ID %in% "frag")
+bwGrowth.1
 
-otherWeirdPlot <- ggplot(alsoWeird, aes(x = timePoint, y = dryWeight, color = geno))+
-  geom_point(size = 2)+
-  geom_line()+
-  facet_wrap(trial~ geno)+
-  labs(title = "Frags")
-  
-  totalWeirdness <- weirdPlot + otherWeirdPlot
-  
-  ggsave("../figures/plotAnomaly.png", plot = totalWeirdness, width = 10, height = 10, units = "in", dpi = 600)
+bwGrowth <- bwGrowth.1 + theme(
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+  panel.background = element_rect(fill = '#F5F5F5'),
+  plot.title = element_blank(), 
+  axis.line = element_line(colour = "black"), 
+  axis.ticks = element_line(color="black"), 
+  text = element_text(size = 35, color="black"), 
+  axis.text.x=element_text(size = 31, color="black"), 
+  axis.text.y=element_text(size = 31, color="black"),
+  legend.position = "right")
+
+
+bwGrowth
+
+ggsave("../figures/bwGrowth.png", plot = bwGrowth, height = 15, width = 20, units = 'in',dpi = 600)
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-##############################################
-##############################################
-##############################################
-##############################################
-##############################################
-##############################################
-##############################################
-##############################################
-##############################################
-##############################################
-
-### Below is Ryan's stuff, everything below here is what Ryan has been working on 
-
-#Im trying to compare growth rates within species, across trials
-
-```{r, species comparisons}
-
-bwFrags1 <- bwClean %>% dplyr::filter(ID == "frag")
-
-bwFrag_dl<- bwFrags1 %>%
-  filter(s1pecies == "dl", trial =="1") 
-  #(trial == "1")
-
-dlTrial1Plot<- ggplot(bwFrag_dl, aes(x=timePoint, y=dryWeight))+ xlab("timePoint") +ylab("Weight") + geom_point(aes(fill = "black")) + 
-geom_smooth(method=lm) +
-  geom_line(aes(color = geno))+
-                      #geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(~geno)+
-                      ylim(0,400)
-
-dlTrial1FragPlot<-annotate_figure(dlTrial1Plot,
-               top = text_grob("dl trial 1",color = "black", face = "bold", size = "14"))                   
-
-
-bwFragPS_trial1 <- bwFrags1 %>% filter(species == "ps", trial == "1")
-bwFragPS_trial2 <- bwFrags1 %>% filter(species == "ps", trial == "2")
-bwFragPS_trial3 <- bwFrags1 %>% filter(species == "ps", trial == "3")
-
-bwFragPlotPStrial1 <- ggplot(bwFragPS_trial1, aes(x = timePoint, y = dryWeight))+
-  geom_point(aes(fill = "black"))+
-  geom_smooth(method = lm)+
-  geom_line(aes(color = geno))+
-  facet_wrap(~geno)
-
-PSTrial1Plot <-annotate_figure(bwFragPlotPStrial1, 
-                               top = text_grob("PS Trial 1", color = "black", face = "bold", size = "14"))
-
-
-bwFragPlotPStrial2 <- ggplot(bwFragPS_trial2, aes(x = timePoint, y = dryWeight))+
-  geom_point(aes(fill = "black"))+
-  geom_smooth(method = lm)+
-  geom_line(aes(color = geno))+
-  facet_wrap(~geno)
-
-psTrial2FragPlot <-annotate_figure(bwFragPlotPStrial2, 
-                               top = text_grob("PS Trial 2", color = "black", face = "bold", size = "14"))
-
-
-bwFragPlotPStrial3 <- ggplot(bwFragPS_trial3, aes(x = timePoint, y = dryWeight))+
-  geom_point(aes(fill = "black"))+
-  geom_smooth(method = lm)+
-  geom_line(aes(color = geno))+
-  facet_wrap(~geno)
-
-psTrial3FragPlot <-annotate_figure(bwFragPlotPStrial3, 
-                               top = text_grob("PS Trial 3", color = "black", face = "bold", size = "14"))
-
-
-```
-
-
-#Testing segmented data to begin comparions of dryweight between species specific frags in a trial and their associated wild colony 
-
-```{r, wild-frag comparisons}
-
-bwWild_dl<- bwWild %>%
-  filter(species == "dl", trial =="1") 
-  #(trial == "1")
-
-dl1WildPlot<- ggplot(bwWild_dl, aes(x=timePoint, y=dryWeight))+ xlab("timePoint") +ylab("Weight") + geom_point(aes(fill = "black")) + 
-geom_smooth(method=lm) +
-  geom_line(aes(color = geno))+
-                      #geom_area(aes(fill = geno, alpha = 0.5))+
-                      facet_wrap(~geno)+
-                      ylim(0,2000)
-
-
-```
-
-[Copy from SA DATA ANALYSIS]
-Now we will run a paired t-test to determine if the percent change in weight of the frags varies from the wilds. First, we need to assess normality via the shapiro-wilk test for normal distribution and the Leven's Test to test for homogeneity of variance. If neither is significant, we will conduct a t-test.
-
-```{r, t-test, include = TRUE}
-shapiro.test(bwChange$percentChange)
-LeveneTest(bwChange$finalDryWeight, group = bwChange$ID)
-
-x=changeFrag$percentChange
-y=changeWild$percentChange
-
-t.test(x, y, paired = TRUE, alternative = "two.sided")
-
-summary(aov(changeFrag$percentChange))
-
-
-
-
-```
-
-
 
 
 
 
 ```{r, PERMANOVA, include = TRUE}
-
-bwFragAov <- bwClean %>% 
-  select(timePoint, species, geno, ID, trial, dryWeight) %>% 
-  dplyr::filter(ID %in% 'frag') %>%
-  dplyr::group_by(timePoint,species,geno,ID,trial)
-
-bwWildAov <- bwClean %>% 
-  dplyr::filter(ID %in% 'wild') %>% 
-  select(timePoint, species,geno, ID, trial, dryWeight) %>% 
-  dplyr::group_by(timePoint,species,geno,ID,trial)
-
-
-# saCombo <- left_join(saFrag, saWild, by = c("timePoint","geno"), copy = FALSE) %>% 
-  # dplyr::rename(fragSA = surfaceArea.x) %>% 
-  # dplyr::rename(wildSA = surfaceArea.y)
-
-bwComboAov <- bind_rows(bwFragAov,bwWildAov)
-
-
-bwFinalAov <- bwComboAov %>% 
-  dplyr::filter(timePoint %in% c("0","4")) %>%
-  select(c('timePoint','species','geno','ID','trial','dryWeight'))
-
-
-bwChangeAov <- dcast(bwFinalAov, species+geno+ID+trial~timePoint) 
-
-bwChangeAov <- dplyr::rename(bwChangeAov, "initialdryWeight" = "0", "finalDryWeight" = "4")
-bwChangeAov
-bwChangeAov$percentChange <- ((bwChangeAov$finalDryWeight-bwChangeAov$initialdryWeight)/bwChangeAov$initialdryWeight)*100
-
-
-bwFragTestAov <- bwChangeAov %>% 
-  select(species,geno, ID, percentChange) %>% 
-  dplyr::filter(ID %in% 'frag') %>%
-  dplyr::group_by(geno,ID)
-  #dplyr::summarise(sum(surfaceArea)) %>% 
-  #dplyr::rename("surfaceArea" = "sum(surfaceArea)")
-
-
-bwWildTestAov <- bwChangeAov %>% 
-  dplyr::filter(ID %in% 'wild') %>% 
-  select(species,geno, ID, percentChange)
-
-
-bwComboAov <- left_join(bwFragTestAov, bwWildTestAov, by = c("geno"), copy = FALSE) %>% 
-  dplyr::rename(fragpercentChange = percentChange.x) %>% 
-  dplyr::rename(wildpercentChange = percentChange.y)
-
-shapiro.test(bwFinalAov$dryWeight)
-LeveneTest(bwFinalAov$dryWeight, group = bwFinalAov$ID)
-
-# 
-# kruskal.test(percentChange ~ ID, data = saChangeAov)
-# 
-# dunnTest(percentChange ~ ID, data = saChangeAov)
-
-
-
-# summary(aov(percentChange ~ ID * geno, data = saChangeAov))
-
-# running the PERMANOVA
-set.seed(999)
-changePermBW <- adonis(formula = percentChange ~ species*geno*ID, data = bwChangeAov, method = "euclidian", permutations = 9999, na.rm = TRUE)
-changePermBW
-
-mean(bwComboAov$fragpercentChange)
-mean(bwComboAov$wildpercentChange)
-
-
-
-mean(bwComboAov$fragpercentChange)
-
-mean(bwComboAov$wildpercentChange)
-
-
 
 
 plotFrags <- bwChangeAov %>% 

@@ -271,30 +271,30 @@ totalChange$timeSeries <- as.factor(totalChange$timeSeries)
 
 
 
-dlSAgrowthGenotype.1 <- ggplot(data=dlsaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
-  geom_bar(stat = "identity", position = position_dodge())+
-  facet_wrap(~id)+
-  scale_fill_hue(name="Time Point") +  
-  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + 
-    ggtitle("Surface Area Growth of DL01, DL02, and DL03") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
-
-dlSAgrowthGenotype.1
-
-dlSAgrowthGenotype <- dlSAgrowthGenotype.1 + theme(
-  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
-  panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
-  axis.line = element_line(colour = "black"), 
-  axis.ticks = element_line(color="black"), 
-  text = element_text(size = 22, color="black"), 
-  axis.text.x=element_text(size = 18, color="black"), 
-  axis.text.y=element_text(size = 18, color="black"),
-  legend.position = "right")
-
-
-dlSAgrowthGenotype
-
-ggsave("../figures/dlSAgrowth.png", plot = dlSAgrowthGenotype, height = 5, width = 9, units = 'in',dpi = 600)
+# dlSAgrowthGenotype.1 <- ggplot(data=dlsaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
+#   geom_bar(stat = "identity", position = position_dodge())+
+#   facet_wrap(~id)+
+#   scale_fill_hue(name="Time Point") +  
+#   labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + 
+#     ggtitle("Surface Area Growth of DL01, DL02, and DL03") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
+# 
+# dlSAgrowthGenotype.1
+# 
+# dlSAgrowthGenotype <- dlSAgrowthGenotype.1 + theme(
+#   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+#   panel.background = element_rect(fill = '#F5F5F5'),
+#   plot.title = element_text(hjust = 0.5), 
+#   axis.line = element_line(colour = "black"), 
+#   axis.ticks = element_line(color="black"), 
+#   text = element_text(size = 22, color="black"), 
+#   axis.text.x=element_text(size = 18, color="black"), 
+#   axis.text.y=element_text(size = 18, color="black"),
+#   legend.position = "right")
+# 
+# 
+# dlSAgrowthGenotype
+# 
+# ggsave("../figures/dlSAgrowth.png", plot = dlSAgrowthGenotype, height = 5, width = 9, units = 'in',dpi = 600)
 
 
 
@@ -303,31 +303,31 @@ ggsave("../figures/dlSAgrowth.png", plot = dlSAgrowthGenotype, height = 5, width
 
 
 
-pcSAgrowthGenotype.1 <- ggplot(data=pcsaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
-  geom_bar(stat = "identity", position = position_dodge())+
-  facet_wrap(~id)+
-  scale_fill_hue(name="Time Point") +  
-  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + 
-    ggtitle("Surface Area Growth of PC13, PC15, and PC16") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
-
-pcSAgrowthGenotype.1
-
-pcSAgrowthGenotype <- pcSAgrowthGenotype.1 + theme(
-  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
-  panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
-  axis.line = element_line(colour = "black"), 
-  axis.ticks = element_line(color="black"), 
-  text = element_text(size = 22, color="black"), 
-  axis.text.x=element_text(size = 18, color="black"), 
-  axis.text.y=element_text(size = 18, color="black"),
-  legend.position = "right")
-
-
-pcSAgrowthGenotype
-
-ggsave("../figures/pcSAgrowth.png", plot = pcSAgrowthGenotype, height = 5, width = 9, units = 'in',dpi = 600)
-
+# pcSAgrowthGenotype.1 <- ggplot(data=pcsaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
+#   geom_bar(stat = "identity", position = position_dodge())+
+#   facet_wrap(~id)+
+#   scale_fill_hue(name="Time Point") +
+#   labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') +
+#     ggtitle("Surface Area Growth of PC13, PC15, and PC16") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
+# 
+# pcSAgrowthGenotype.1
+# 
+# pcSAgrowthGenotype <- pcSAgrowthGenotype.1 + theme(
+#   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+#   panel.background = element_rect(fill = '#F5F5F5'),
+#   plot.title = element_text(hjust = 0.5),
+#   axis.line = element_line(colour = "black"),
+#   axis.ticks = element_line(color="black"),
+#   text = element_text(size = 22, color="black"),
+#   axis.text.x=element_text(size = 18, color="black"),
+#   axis.text.y=element_text(size = 18, color="black"),
+#   legend.position = "right")
+# 
+# 
+# pcSAgrowthGenotype
+# 
+# ggsave("../figures/pcSAgrowth.png", plot = pcSAgrowthGenotype, height = 5, width = 9, units = 'in',dpi = 600)
+# 
 
 
 ```
@@ -336,104 +336,104 @@ ggsave("../figures/pcSAgrowth.png", plot = pcSAgrowthGenotype, height = 5, width
 
 
 
-psSAgrowthGenotype.1 <- ggplot(data=pssaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
-  geom_bar(stat = "identity", position = position_dodge())+
-  facet_wrap(~id)+
-  scale_fill_hue(name="Time Point") +  
-  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + 
-    ggtitle("Surface Area Growth of PS07, PS11, PS12, PS13, and PS14") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
+# psSAgrowthGenotype.1 <- ggplot(data=pssaFinal, aes(x = treatment, y = SA, fill = timepoint)) +
+#   geom_bar(stat = "identity", position = position_dodge())+
+#   facet_wrap(~id)+
+#   scale_fill_hue(name="Time Point") +
+#   labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') +
+#     ggtitle("Surface Area Growth of PS07, PS11, PS12, PS13, and PS14") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Wild"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
+# 
+# psSAgrowthGenotype.1
+# 
+# psSAgrowthGenotype <- psSAgrowthGenotype.1 + theme(
+#   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
+#   panel.background = element_rect(fill = '#F5F5F5'),
+#   plot.title = element_text(hjust = 0.5),
+#   axis.line = element_line(colour = "black"),
+#   axis.ticks = element_line(color="black"),
+#   text = element_text(size = 22, color="black"),
+#   axis.text.x=element_text(size = 18, color="black"),
+#   axis.text.y=element_text(size = 18, color="black"),
+#   legend.position = "right")
+# 
+# 
+# psSAgrowthGenotype
+# 
+# ggsave("../figures/psSAgrowth.png", plot = psSAgrowthGenotype, height = 10, width = 15, units = 'in',dpi = 600)
 
-psSAgrowthGenotype.1
 
-psSAgrowthGenotype <- psSAgrowthGenotype.1 + theme(
-  panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
-  panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_text(hjust = 0.5), 
-  axis.line = element_line(colour = "black"), 
-  axis.ticks = element_line(color="black"), 
-  text = element_text(size = 22, color="black"), 
-  axis.text.x=element_text(size = 18, color="black"), 
-  axis.text.y=element_text(size = 18, color="black"),
-  legend.position = "right")
-
-
-psSAgrowthGenotype
-
-ggsave("../figures/psSAgrowth.png", plot = psSAgrowthGenotype, height = 10, width = 15, units = 'in',dpi = 600)
-
-
-
+# 
+# ```
+# 
+# #Here we are combining all of the surface area percent change figures (grouped by species)
+# 
+# ```{r, combinedSApercentChangeVisualization , include = TRUE}
+# library(ggplot2)
+# library(ggpubr)
+# theme_set(theme_pubr())
+# 
+# percentChange <- ggarrange(dlSApercentChange, pcSApercentChange, psSApercentChange,
+#                     labels = c("A", "B", "C"),
+#                     ncol = 2, nrow = 2, common.legend = TRUE, legend = "right")
+# percentChange <- annotate_figure(
+#   percentChange,
+#   top = text_grob("Surface Area Percent Change",
+#                   color = "black", face = "bold", size = 24))
+# 
+# 
+# percentChange
+# 
+# ggsave("../figures/percentChange.png", plot = percentChange, height = 15, width = 20, units = 'in',dpi = 600)
+# 
+# ```
+# 
+# #Now we will run a paired t-test to determine if the percent change in surface area of the frags varies from the wilds. First, we need to assess normality via the shapiro-wilk test for normal distribution and the Levene's Test to test for homogeneity of variance. If neither is significant, we will conduct a t-test.
+# 
+# ```{r,dlPercentChangeTest,include = TRUE}
+# dlsaFragTest <- dlsaChange %>%
+#   select(id, treatment, percentChange) %>%
+#   dplyr::filter(treatment %in% 'frag') %>%
+#   dplyr::group_by(id,treatment)
+# 
+# dlsaWildTest <- dlsaChange %>%
+#   dplyr::filter(treatment %in% 'wild') %>%
+#   select(id, treatment, percentChange)
+# 
+# dlsaTest <- left_join(dlsaFragTest, dlsaWildTest, by = c("id"), copy = FALSE) %>%
+#   dplyr::rename(fragpercentChange = percentChange.x) %>%
+#   dplyr::rename(wildpercentChange = percentChange.y)
+# ```
+# 
+# ```{r,pcPercentChangeTest,include = TRUE}
+# pcsaFragTest <- pcsaChange %>%
+#   select(id, treatment, percentChange) %>%
+#   dplyr::filter(treatment %in% 'frag') %>%
+#   dplyr::group_by(id,treatment)
+# 
+# pcsaWildTest <- pcsaChange %>%
+#   dplyr::filter(treatment %in% 'wild') %>%
+#   select(id, treatment, percentChange)
+# 
+# pcsaTest <- left_join(pcsaFragTest, pcsaWildTest, by = c("id"), copy = FALSE) %>%
+#   dplyr::rename(pcfragpercentChange = percentChange.x) %>%
+#   dplyr::rename(pcwildpercentChange = percentChange.y)
+# ```
+# 
+# ```{r,psPercentChangeTest,include = TRUE}
+# pssaFragTest <- pssaChange %>%
+#   select(id, treatment, percentChange) %>%
+#   dplyr::filter(treatment %in% 'frag') %>%
+#   dplyr::group_by(id,treatment)
+# 
+# pssaWildTest <- pssaChange %>%
+#   dplyr::filter(treatment %in% 'wild') %>%
+#   select(id, treatment, percentChange)
+# 
+# pssaTest <- left_join(pssaFragTest, pssaWildTest, by = c("id"), copy = FALSE) %>%
+#   dplyr::rename(psfragpercentChange = percentChange.x) %>%
+#   dplyr::rename(pswildpercentChange = percentChange.y)
+# ```
 ```
-
-#Here we are combining all of the surface area percent change figures (grouped by species)
-
-```{r, combinedSApercentChangeVisualization , include = TRUE}
-library(ggplot2)
-library(ggpubr)
-theme_set(theme_pubr())
-
-percentChange <- ggarrange(dlSApercentChange, pcSApercentChange, psSApercentChange,
-                    labels = c("A", "B", "C"),
-                    ncol = 2, nrow = 2, common.legend = TRUE, legend = "right")
-percentChange <- annotate_figure(
-  percentChange,
-  top = text_grob("Surface Area Percent Change",
-                  color = "black", face = "bold", size = 24))
-
-
-percentChange
-
-ggsave("../figures/percentChange.png", plot = percentChange, height = 15, width = 20, units = 'in',dpi = 600)
-
-```
-
-#Now we will run a paired t-test to determine if the percent change in surface area of the frags varies from the wilds. First, we need to assess normality via the shapiro-wilk test for normal distribution and the Levene's Test to test for homogeneity of variance. If neither is significant, we will conduct a t-test.
-
-```{r,dlPercentChangeTest,include = TRUE}
-dlsaFragTest <- dlsaChange %>%
-  select(id, treatment, percentChange) %>%
-  dplyr::filter(treatment %in% 'frag') %>%
-  dplyr::group_by(id,treatment)
-
-dlsaWildTest <- dlsaChange %>%
-  dplyr::filter(treatment %in% 'wild') %>%
-  select(id, treatment, percentChange)
-
-dlsaTest <- left_join(dlsaFragTest, dlsaWildTest, by = c("id"), copy = FALSE) %>%
-  dplyr::rename(fragpercentChange = percentChange.x) %>%
-  dplyr::rename(wildpercentChange = percentChange.y)
-```
-
-```{r,pcPercentChangeTest,include = TRUE}
-pcsaFragTest <- pcsaChange %>%
-  select(id, treatment, percentChange) %>%
-  dplyr::filter(treatment %in% 'frag') %>%
-  dplyr::group_by(id,treatment)
-
-pcsaWildTest <- pcsaChange %>%
-  dplyr::filter(treatment %in% 'wild') %>%
-  select(id, treatment, percentChange)
-
-pcsaTest <- left_join(pcsaFragTest, pcsaWildTest, by = c("id"), copy = FALSE) %>%
-  dplyr::rename(pcfragpercentChange = percentChange.x) %>%
-  dplyr::rename(pcwildpercentChange = percentChange.y)
-```
-
-```{r,psPercentChangeTest,include = TRUE}
-pssaFragTest <- pssaChange %>%
-  select(id, treatment, percentChange) %>%
-  dplyr::filter(treatment %in% 'frag') %>%
-  dplyr::group_by(id,treatment)
-
-pssaWildTest <- pssaChange %>%
-  dplyr::filter(treatment %in% 'wild') %>%
-  select(id, treatment, percentChange)
-
-pssaTest <- left_join(pssaFragTest, pssaWildTest, by = c("id"), copy = FALSE) %>%
-  dplyr::rename(psfragpercentChange = percentChange.x) %>%
-  dplyr::rename(pswildpercentChange = percentChange.y)
-```
-
 
 
 # Normality testing and Data Transformation
@@ -505,37 +505,28 @@ changeLM <- lmer(percentChange ~ species*treatment*timeSeries + (1 | id), totalC
 changeLManova <- anova(changeLM)
 changeLManova
 
-emmeans(changeLManova, list(pairwise ~ timeSeries), adjust = 'bonferroni')
+#Treatment, timeSeries, and the interactions between species:timeSeries, treatment:timeSeries, and species:treatment:timeSeries are significant 
 
-kruskal.test(percentChange ~ species*treatment*timeSeries, data = totalChange)
-kruskal.test(percentChange~species, data = totalChange)
-kruskal.test(percentChange~treatment, data = totalChange)
-kruskal.test(percentChange ~ timeSeries, data = totalChange)
-
-changePerm <- adonis2(totalChange$percentChange ~ species*treatment*timeSeries, data = totalChange, method = "euclidian", permutations = 9999, na.rm = TRUE)
-
-
+emmeans(changeLM, list(pairwise ~ treatment), adjust = 'bonferroni')
+emmeans(changeLM, list(pairwise ~ timeSeries), adjust = 'bonferroni')
 
 
 ```
 
 #Here we are creating a figure for the mean percent change of each species. Included in this figure are error bars derived from the standard deviation divided by the square root of the sample size (n)
 
+
+
+
+
 ```{r, meanPercentChangeVisualization, include = TRUE}
 se <- function(x) sqrt(var(x) / length(x))
 
-totalSAse <- totalSA %>%
-  dplyr::select(timepoint, species, treatment, SA, logSA) %>% 
-  dplyr::group_by(timepoint, species, treatment) %>% 
-  dplyr::summarise(
-    meanSA = mean(SA),
-    sd = sd(SA),
-    n = n(),
-    se = sd/sqrt(n))
+
 
 totalChangeSe <- totalChange %>% 
-dplyr::select(timepoint, species, treatment,percentChange) %>% 
-  dplyr::group_by(timepoint, species, treatment) %>% 
+dplyr::select(timeSeries, treatment,species, percentChange) %>% 
+  dplyr::group_by(timeSeries, species, treatment) %>% 
   dplyr::summarise(
     meanPC = mean(percentChange),
     sd = sd(percentChange),
@@ -543,24 +534,26 @@ dplyr::select(timepoint, species, treatment,percentChange) %>%
     se = sd/sqrt(n))
 
 
-SApercentChange.1 <- ggplot(totalChangeSe, aes(x = treatment, y = meanPC, fill = timepoint)) +
+SApercentChange.1 <- ggplot(totalChangeSe, aes(x = timeSeries, y = meanPC, fill = treatment)) +
   geom_bar(stat = "identity", position = position_dodge())+
+  ylim(0,100)+
   facet_wrap(~species)+
-    ggtitle("Surface Area Percent Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c( "#EAA65D","#0D3B66"))+    
-    xlab("Treatment") + ylab("Percent Change (%)")+
-  geom_errorbar( aes(x=treatment, ymin=meanPC-se, ymax=meanPC+se), position = position_dodge()) +
-    ggtitle("Mean Percent Change in Surface Area of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(name="Time Point",values = c("#0EBEBE","#9FA0FF"))+    
-    xlab("Treatment") + ylab("Percent Change (%)")
+  ggtitle(expression(paste("Surface Area Percent Growth of ",italic("D. labyrinthiformis, P. strigosa,")," and ",italic("P. clivosa"))))+
+  scale_fill_manual(name="Treatment",values = c( "#EAA65D","#0D3B66"), labels=c('Frag', "Whole"))+
+  xlab("Treatment")+
+  ylab("Percent Change (%)")+
+  scale_x_discrete(name = "Time Interval", labels = c("Initial to 3 Months", "3 Months to 6 Months"))+
+  geom_errorbar( aes(x=timeSeries, ymin=meanPC-se, ymax=meanPC+se), position = position_dodge())
 SApercentChange.1
 
 SApercentChange<- SApercentChange.1 + theme(
   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
   panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_blank(), 
+  plot.title = element_text(size = 35, color = 'black'), 
   axis.line = element_line(colour = "black"), 
   axis.ticks = element_line(color="black"), 
   text = element_text(size = 35, color="black"), 
-  axis.text.x=element_text(size = 31, color="black"), 
+  axis.text.x=element_text(size = 18, color="black"), 
   axis.text.y=element_text(size = 31, color="black"),
   legend.position = "right")
 
@@ -570,37 +563,55 @@ ggsave("../figures/SApercentChange.png", plot = SApercentChange, height = 15, wi
 
 ```
 
+
+
+
+
 #Here we are creating a figure for the mean T0, T3, and T6 surface area of each species. Included in this figure are error bars derived from the standard deviation divided by the square root of the sample size (n)
 
 ```{r, meanSAgrowthVisualization, include = TRUE}
 
+totalSAse <- totalFinal %>%
+  dplyr::select(timepoint, treatment, species, SA, logSA) %>% 
+  dplyr::group_by(timepoint, treatment, species) %>% 
+  dplyr::summarise(
+    meanSA = mean(SA),
+    sd = sd(SA),
+    n = n(),
+    se = sd/sqrt(n))
 
-
-SAgrowth.1 <- ggplot(data=totalSAse, aes(x = treatment, y = meanSA, fill = timepoint)) +
-  geom_bar(stat = "identity", position = position_dodge(), alpha = 0.75)+
-  geom_errorbar( aes(x=treatment, ymin=meanSA-se, ymax=meanSA+se), position = position_dodge())+ 
-  facet_wrap(~species)+
-  scale_fill_hue(name="Time Point") +  
-  labs(x = "Treatment", y = bquote("Surface Area" ~ (cm^2)),fill='Time Point') + 
-    ggtitle("Mean Surface Area Growth of D. labyrinthiformis, P. strigosa, and P. clivosa Over Six Months") + scale_fill_discrete(labels=c('Initial','T3','Final'))+scale_x_discrete(labels=c("frag" = "Frag", "wild" = "Whole"))+scale_fill_manual(values = c("#0053A6", "#D3F292", "#5CADFF"))
+SAgrowth.1 <- ggplot(data=totalSAse, aes(x = timepoint, y = meanSA, fill = treatment)) +
+  geom_bar(stat = "identity", position = position_dodge())+
+  ylim(0, 600)+
+    facet_wrap(~species)+
+  geom_errorbar( aes(x=timepoint, ymin=meanSA-se, ymax=meanSA+se), position = position_dodge())+
+  scale_fill_manual(name="Treatment",values = c( "#6F38C5","#87A2FB"), labels=c('Frag', "Whole"))+
+  labs(x = "Time Point", y = bquote("Surface Area" ~ (cm^2)),fill='Treatment') + 
+  ggtitle(expression(paste("Mean Surface Area of ",italic("D. labyrinthiformis, P. strigosa,")," and ",italic("P. clivosa"))))+
+  scale_x_discrete(name = "Time", labels = c("Initial", "3 Months", "6 Months"))
 
 SAgrowth.1
 
 SAgrowth <- SAgrowth.1 + theme(
   panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"),
   panel.background = element_rect(fill = '#F5F5F5'),
-  plot.title = element_blank(), 
+  plot.title = element_text(size = 35, color = 'black'), 
   axis.line = element_line(colour = "black"), 
   axis.ticks = element_line(color="black"), 
   text = element_text(size = 35, color="black"), 
-  axis.text.x=element_text(size = 31, color="black"), 
+  axis.text.x=element_text(size = 20, color="black"), 
   axis.text.y=element_text(size = 31, color="black"),
   legend.position = "right")
 
 
 SAgrowth
 
+
 ggsave("../figures/SAgrowth.png", plot = SAgrowth, height = 15, width = 20, units = 'in',dpi = 600)
+
+
+
+
 
 ```
 
