@@ -520,6 +520,20 @@ emmeans(changeLM, list(pairwise ~ timeSeries), adjust = 'bonferroni')
 
 
 ```{r, meanPercentChangeVisualization, include = TRUE}
+
+#potential new way to do error bars easily, see dplyr::n() etc
+df %>% 
+  dplyr::Filter(!is.na(body_mass_g)) %>% 
+  dplyr::group_by(species) %>% 
+  dplyr::summarise(
+    mean = mean(body_mass_g),
+    se = sd(body_mass_g)/sqrt(dplyr::n())
+  ) %>% 
+  ggplot(aes(x = species, y = mean))+
+  geom_terrorbar(aes(ymin = mean-2*se, ymax = mean+2*se))+
+  geom_point()+
+  theme_bw()
+
 se <- function(x) sqrt(var(x) / length(x))
 
 
